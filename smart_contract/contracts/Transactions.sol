@@ -18,6 +18,7 @@
 
     TransferStruct[] transactions;
 
+    //esta funcion añade una transacción al array y emite un evento
     function addToBlockchain(address payable receiver, uint amount, string memory message, string memory keyword) public{
         transactionCount += 1;
         transactions.push(TransferStruct(msg.sender,receiver,amount,message,block.timestamp,keyword));
@@ -25,10 +26,12 @@
         emit Transfer(msg.sender, receiver, amount, message, block.timestamp, keyword);
     }
 
+    //devuelve todas las transacciones (para despues mostrarlas en el front)
     function getAllTransactions() public view returns (TransferStruct[] memory){
         return transactions;
     }
 
+    //devolvera el numero total de transacciones
     function getTransactionCount() public view returns (uint256){
         return transactionCount;
     }
