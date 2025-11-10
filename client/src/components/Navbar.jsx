@@ -18,12 +18,10 @@ const Navbar = () => {
     return (
         <nav className='w-full flex md:justify-center justify-between items-center p-4'>
             <div className='md:flex-[0.5] flex-initial justify-center items-center'>
-                <img src={logo} alt='logo' className='w-32 cursor-pointer' />
+                <img src={logo} alt='logo' className='w-40 md:w-48 cursor-pointer' />
             </div>
             <ul className='text-white md:flex hidden list-none flex-row justify-between items-center flex-initial'>
-                {["Market", "Exchange", "Tutorials", "Wallets"].map((item, index) => (
-                    <NavbarItem key={item + index} title={item} />
-                ))}
+                {/* Secciones ocultadas por diseño: Market, Exchange, Tutorials, Wallets */}
                 <li className='bg-[#2952e3] py-2 px-7 mx-4 rounded-full cursor-pointer hover:bg-[#2546bd]'>
                     Login
                 </li>
@@ -40,9 +38,12 @@ const Navbar = () => {
                         <li className='text-xl w-full my-2'>
                             <AiOutlineClose onClick={() => setToggleMenu(false)} />
                         </li>
-                        {["Market", "Exchange", "Tutorials", "Wallets"].map((item, index) => (
-                            <NavbarItem key={item + index} title={item} classProps="my-2 text-lg" />
-                        ))}
+                        {/* Secciones ocultadas en menú móvil también */}
+                        <li className='my-2 text-lg w-full'>
+                            <div className='bg-[#2952e3] py-2 px-7 rounded-full cursor-pointer hover:bg-[#2546bd]'>
+                                Login
+                            </div>
+                        </li>
                     </ul>
                 )}
             </div>
