@@ -1,4 +1,11 @@
-# Node modules
+node_modules/
+.env
+dist/
+artifacts/
+cache/
+coverage/
+typechain/
+*.log# Node modules
 /node_modules
 
 # Compilation output

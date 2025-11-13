@@ -1,13 +1,20 @@
-import hre, { network } from "hardhat";
-
+import hre from "hardhat";
+import "dotenv/config";
 
 const main = async () => {
+  // Create a wallet from PRIVATE KEY and connect to provider to ensure we have a signer that can send txs
+  const provider = hre.ethers.provider;
+  const pk = process.env.SEPOLIA_PRIVATE_KEY || process.env.PRIVATE_KEY || "";
+  if (!pk) throw new Error("No private key found in env (SEPOLIA_PRIVATE_KEY or PRIVATE_KEY)");
+  const deployer = new hre.ethers.Wallet(pk, provider);
 
-  const Transactions = await (hre as any).ethers.getContractFactory("Transactions");
-  const transactions = await Transactions.deploy();
+  // Pass the deployer signer directly to getContractFactory (ethers v6 + hardhat-ethers)
+  const TransactionsFactory = await hre.ethers.getContractFactory("Transactions", deployer);
+  const transactions = await TransactionsFactory.deploy();
 
-  await transactions.deployed();
-  console.log("Transactions deployed to:", transactions.address);
+  // ethers v6: waitForDeployment and getAddress
+  await transactions.waitForDeployment();
+  console.log("Transactions deployed to:", await transactions.getAddress());
 }
 
 
