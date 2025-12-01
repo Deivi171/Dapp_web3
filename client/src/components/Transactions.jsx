@@ -12,7 +12,7 @@ import { shortenAddress } from '../utils/shortenAddress';
 import { formatDate, formatETH, formatUSD } from '../utils/formatters';
 import { exportToCSV, exportToJSON } from '../utils/exportData';
 import useFetch from '../hooks/useFetch';
-import { CopyButton } from './ui';
+import { CopyButton, TiltedCard } from './ui';
 import { Stats, TransactionFilters } from './dashboard';
 
 /**
@@ -32,8 +32,8 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
             lg:max-w-[280px]
             sm:min-w-[250px]
             sm:max-w-[250px]
-            flex-col p-4 rounded-xl hover:shadow-2xl
-            transition-all duration-500 hover:scale-105
+            flex-col p-4 rounded-xl
+            transition-all duration-500
             animate-fadeInUp
             cursor-pointer
             border-2
@@ -81,16 +81,23 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                         }`}>"{message}"</p>
                     )}
                 </div>
-                <img 
-                    src={gifUrl || url} 
-                    alt="gif" 
-                    className='w-full h-48 rounded-lg shadow-lg object-cover transition-all duration-300 hover:scale-105'
-                    onError={(e) => {
-                        e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${keyword}`;
-                    }}
+                
+                {/* Imagen con efecto 3D TiltedCard */}
+                <TiltedCard
+                    imageSrc={gifUrl || url}
+                    altText={keyword}
+                    captionText={`${formatETH(amount, 4)} - ${keyword}`}
+                    containerHeight="200px"
+                    containerWidth="100%"
+                    imageHeight="180px"
+                    imageWidth="100%"
+                    scaleOnHover={1.05}
+                    rotateAmplitude={12}
+                    showMobileWarning={false}
+                    showTooltip={true}
                 />
 
-                <div className={`p-2 px-4 w-max rounded-3xl -mt-4 shadow-2xl transition-all duration-300 hover:scale-110 ${
+                <div className={`p-2 px-4 w-max rounded-3xl -mt-4 shadow-2xl transition-all duration-300 hover:scale-110 z-10 ${
                     theme === 'dark' 
                         ? 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]' 
                         : 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]'
