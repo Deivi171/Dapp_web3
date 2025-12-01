@@ -1,23 +1,50 @@
-import React, { useEffect, useState } from "react";
+/**
+ * Contexto de Transacciones
+ * Maneja la conexión con la wallet, transacciones y estado de la blockchain
+ * @module context/TransactionContext
+ */
+
+import React, { useEffect, useState, useCallback } from "react";
 import { ethers } from "ethers";
+import toast from "react-hot-toast";
 import { contractABI, contractAddress } from "../utils/constants";
+import { getEthPrice } from "../services/coingecko";
 
 export const TransactionContext = React.createContext();
 
 const { ethereum } = window;
 
+/**
+ * Obtiene una instancia del contrato de transacciones
+ * @returns {Promise<ethers.Contract>} Instancia del contrato
+ */
 const getEthereumContract = async () => {
     if (!ethereum) throw new Error("Ethereum object doesn't exist");
 
-    // ethers v6: use BrowserProvider in the browser
     const provider = new ethers.BrowserProvider(ethereum);
     const signer = await provider.getSigner();
     const transactionContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-    console.log({ provider, signer, transactionContract });
     return transactionContract;
 };
 
+/**
+ * Obtiene el balance de una dirección
+ * @param {string} address - Dirección de la wallet
+ * @returns {Promise<string>} Balance en ETH
+ */
+const getBalance = async (address) => {
+    if (!ethereum || !address) return "0";
+    
+    try {
+        const provider = new ethers.BrowserProvider(ethereum);
+        const balanceWei = await provider.getBalance(address);
+        return ethers.formatEther(balanceWei);
+    } catch (error) {
+        console.error("Error fetching balance:", error);
+        return "0";
+    }
+};
 
 export const TransactionProvider = ({ children }) => {
     const [currentAccount, setCurrentAccount] = useState('');
@@ -25,154 +52,255 @@ export const TransactionProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [transactionCount, setTransactionCount] = useState(localStorage.getItem('transactionCount'));
     const [transactions, setTransactions] = useState([]);
+    
+    // Nuevos estados para balance y precio
+    const [balance, setBalance] = useState("0");
+    const [ethPrice, setEthPrice] = useState(0);
+    const [ethPriceChange, setEthPriceChange] = useState(0);
+
     const handleChange = (e, name) => {
         setFormData((prevState) => ({ ...prevState, [name]: e.target.value }));
     };
 
+    /**
+     * Actualiza el balance de la wallet actual
+     */
+    const updateBalance = useCallback(async () => {
+        if (currentAccount) {
+            const newBalance = await getBalance(currentAccount);
+            setBalance(newBalance);
+        }
+    }, [currentAccount]);
 
+    /**
+     * Actualiza el precio de ETH desde CoinGecko
+     */
+    const updateEthPrice = useCallback(async () => {
+        try {
+            const priceData = await getEthPrice();
+            setEthPrice(priceData.usd);
+            setEthPriceChange(priceData.change24h);
+        } catch (error) {
+            console.error("Error fetching ETH price:", error);
+        }
+    }, []);
+
+    /**
+     * Obtiene todas las transacciones del contrato
+     */
     const getAllTransactions = async () => {
         try {
-            if (!ethereum) return alert("Please install MetaMask.");
-                // get contract instance (await the promise)
-                const transactionContract = await getEthereumContract();
+            if (!ethereum) return toast.error("Por favor instala MetaMask");
+            
+            const transactionContract = await getEthereumContract();
+            const availableTransactions = await transactionContract.getAllTransactions();
 
-                const availableTransactions = await transactionContract.getAllTransactions();
-
-                // adapt to ethers v6 return types (timestamp as bigint, amount as BigInt or native)
-                const structuredTransactions = availableTransactions.map((transaction) => ({
-                    addressTo: transaction.receiver,
-                    addressFrom: transaction.sender,
-                    timestamp: new Date(Number(transaction.timestamp) * 1000).toLocaleString(),
-                    message: transaction.message,
-                    keyword: transaction.keyword,
-                    // use ethers.formatEther to convert wei to ETH (returns string)
-                    amount: Number(ethers.formatEther(transaction.amount)),
-                }));
-            console.log(structuredTransactions);
+            const structuredTransactions = availableTransactions.map((transaction) => ({
+                addressTo: transaction.receiver,
+                addressFrom: transaction.sender,
+                timestamp: new Date(Number(transaction.timestamp) * 1000).toLocaleString(),
+                message: transaction.message,
+                keyword: transaction.keyword,
+                amount: Number(ethers.formatEther(transaction.amount)),
+            }));
 
             setTransactions(structuredTransactions);
         } catch (error) {
-            console.log(error);
+            console.error("Error fetching transactions:", error);
         }
-    }
+    };
 
-
-
+    /**
+     * Verifica si la wallet está conectada
+     */
     const checkIfWalletIsConnected = async () => {
-
         try {
-            if (!ethereum) return alert("Please install MetaMask.");
+            if (!ethereum) return;
 
             const accounts = await ethereum.request({ method: "eth_accounts" });
 
             if (accounts.length) {
                 setCurrentAccount(accounts[0]);
-                // load transactions for this account
                 await getAllTransactions();
-            } else {
-                console.log("No accounts found");
             }
-
         } catch (error) {
-
-            console.log(error);
-
-            throw new Error("No Ethereum object.");
+            console.error("Error checking wallet connection:", error);
         }
+    };
 
-    }
-
+    /**
+     * Verifica si existen transacciones previas
+     */
     const checkIfTransactionsExists = async () => {
         try {
+            if (!ethereum) return;
+            
             const transactionContract = await getEthereumContract();
             const transactionsCount = await transactionContract.getTransactionCount();
-            
-        // store as string (BigInt/number safe)
-        window.localStorage.setItem("transactionCount", transactionsCount.toString());
-        
+            window.localStorage.setItem("transactionCount", transactionsCount.toString());
         } catch (error) {
-            console.log(error);
-
-            throw new Error("No Ethereum object.");
+            console.error("Error checking transactions:", error);
         }
-    }        
+    };
 
-
-
-
-
+    /**
+     * Conecta la wallet de MetaMask
+     */
     const connectWallet = async () => {
         try {
-            if (!ethereum) return alert("Please install MetaMask.");
+            if (!ethereum) {
+                toast.error("Por favor instala MetaMask");
+                return;
+            }
 
+            toast.loading("Conectando wallet...", { id: "connect" });
+            
             const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-
             setCurrentAccount(accounts[0]);
-            // load transactions now that user connected
+            
+            toast.success("¡Wallet conectada!", { id: "connect" });
+            
             await getAllTransactions();
+        } catch (error) {
+            console.error("Error connecting wallet:", error);
+            toast.error("Error al conectar wallet", { id: "connect" });
+        }
+    };
+
+    /**
+     * Envía una transacción
+     */
+    const sendTransaction = async () => {
+        try {
+            if (!ethereum) {
+                toast.error("Por favor instala MetaMask");
+                return;
+            }
+
+            const { addressTo, amount, keyword, message } = formData;
+            
+            if (!currentAccount) {
+                toast.error("Por favor conecta tu wallet");
+                return;
+            }
+
+            const transactionContract = await getEthereumContract();
+            const parsedAmount = ethers.parseEther(amount || "0");
+
+            toast.loading("Enviando transacción...", { id: "tx" });
+
+            // Enviar ETH directamente
+            await ethereum.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: currentAccount,
+                    to: addressTo,
+                    gas: "0x5208",
+                    value: '0x' + parsedAmount.toString(16),
+                }],
+            });
+
+            // Registrar en el contrato
+            const tx = await transactionContract.addToBlockchain(addressTo, parsedAmount, message, keyword);
+
+            setIsLoading(true);
+            toast.loading("Procesando en blockchain...", { id: "tx" });
+            
+            await tx.wait();
+            
+            setIsLoading(false);
+            toast.success("¡Transacción exitosa! 🎉", { id: "tx" });
+
+            const transactionsCount = await transactionContract.getTransactionCount();
+            setTransactionCount(Number(transactionsCount));
+            
+            // Actualizar balance y transacciones
+            await updateBalance();
+            await getAllTransactions();
+            
+            // Limpiar formulario
+            setFormData({ addressTo: '', amount: '', keyword: '', message: '' });
 
         } catch (error) {
-            console.error(error);
-
-            throw new Error("No Ethereum object.");
+            console.error("Transaction error:", error);
+            setIsLoading(false);
+            toast.error("Error en la transacción", { id: "tx" });
         }
-    }
+    };
 
-
-    const sendTransaction = async () => {
-    try {
-        if (!ethereum) return alert("Please install MetaMask.");
-
-        const { addressTo, amount, keyword, message } = formData;
-        if (!currentAccount) return alert("Please connect your wallet.");
-
-        const transactionContract = await getEthereumContract();
-        // ethers v6: parseEther is top-level
-        const parsedAmount = ethers.parseEther(amount || "0");
-
-        // Send transaction via wallet (optional - this sends raw ETH)
-        await ethereum.request({
-            method: "eth_sendTransaction",
-            params: [{
-                from: currentAccount,
-                to: addressTo,
-                gas: "0x5208",
-                // eth_sendTransaction expects a hex value string (wei)
-                value: '0x' + parsedAmount.toString(16),
-            }],
-        });
-
-        // Interact with contract to add to blockchain (assumes contract has this method)
-        const tx = await transactionContract.addToBlockchain(addressTo, parsedAmount, message, keyword);
-
-        setIsLoading(true);
-        console.log(`Loading - ${tx.hash}`);
-        await tx.wait();
-        setIsLoading(false);
-        console.log(`Success - ${tx.hash}`);
-
-    const transactionsCount = await transactionContract.getTransactionCount();
-    setTransactionCount(Number(transactionsCount));
-    // refresh transactions list
-      window.location.reload();
-
-    await getAllTransactions();
-
-    } catch (error) {
-        console.log(error);
-
-        throw new Error("No Ethereum object.");
-    }
-}
-    
-
+    // Efectos iniciales
     useEffect(() => {
         checkIfWalletIsConnected();
         checkIfTransactionsExists();
+        updateEthPrice();
+
+        // Actualizar precio cada minuto
+        const priceInterval = setInterval(updateEthPrice, 60000);
+        
+        return () => clearInterval(priceInterval);
+    }, []);
+
+    // Actualizar balance cuando cambia la cuenta
+    useEffect(() => {
+        if (currentAccount) {
+            updateBalance();
+            
+            // Actualizar balance cada 30 segundos
+            const balanceInterval = setInterval(updateBalance, 30000);
+            return () => clearInterval(balanceInterval);
+        }
+    }, [currentAccount, updateBalance]);
+
+    // Escuchar cambios de cuenta en MetaMask
+    useEffect(() => {
+        if (ethereum) {
+            const handleAccountsChanged = (accounts) => {
+                if (accounts.length > 0) {
+                    setCurrentAccount(accounts[0]);
+                    toast.success("Cuenta cambiada");
+                } else {
+                    setCurrentAccount('');
+                    setBalance("0");
+                    toast("Wallet desconectada", { icon: "👋" });
+                }
+            };
+
+            ethereum.on('accountsChanged', handleAccountsChanged);
+            
+            return () => {
+                ethereum.removeListener('accountsChanged', handleAccountsChanged);
+            };
+        }
     }, []);
 
     return (
-        <TransactionContext.Provider value={{ connectWallet, currentAccount, formData, setFormData, handleChange , sendTransaction, transactions, isLoading }}>
+        <TransactionContext.Provider 
+            value={{ 
+                // Wallet
+                connectWallet, 
+                currentAccount,
+                balance,
+                
+                // Precio ETH
+                ethPrice,
+                ethPriceChange,
+                
+                // Formulario
+                formData, 
+                setFormData, 
+                handleChange,
+                
+                // Transacciones
+                sendTransaction, 
+                transactions, 
+                transactionCount,
+                isLoading,
+                
+                // Utilidades
+                updateBalance,
+                getAllTransactions,
+            }}
+        >
             {children}
         </TransactionContext.Provider>
     );

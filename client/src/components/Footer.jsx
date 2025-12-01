@@ -12,7 +12,7 @@ const Footer = () => {
       <div className="flex justify-center items-center flex-col mt-5">
         <p className={`text-sm text-center font-semibold ${
           theme === 'dark' ? 'text-white' : 'text-gray-900'
-        }`}>Dapp Web3</p>
+        }`}>Flashet</p>
         <p className={`text-sm text-center mt-2 ${
           theme === 'dark' ? 'text-gray-400' : 'text-gray-700'
         }`}>Your trusted crypto platform</p>
@@ -25,7 +25,7 @@ const Footer = () => {
       <div className="sm:w-[90%] w-full flex justify-between items-center mt-3">
         <p className={`text-left text-xs ${
           theme === 'dark' ? 'text-white' : 'text-gray-800'
-        }`}>@Deivi171-Project</p>
+        }`}>Flashet Company</p>
         <p className={`text-right text-xs ${
           theme === 'dark' ? 'text-white' : 'text-gray-800'
         }`}>All rights reserved</p>

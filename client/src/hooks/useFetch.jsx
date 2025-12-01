@@ -1,9 +1,19 @@
+/**
+ * Hook para obtener GIFs de Giphy
+ * @module hooks/useFetch
+ */
 
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 const API_KEY = import.meta.env.VITE_GIPHY_API;
 
-const useFetch = ({keyword}) => {
+/**
+ * Hook que obtiene un GIF basado en un keyword
+ * @param {Object} params - Parámetros
+ * @param {string} params.keyword - Palabra clave para buscar
+ * @returns {string} URL del GIF
+ */
+const useFetch = ({ keyword }) => {
     const [gifUrl, setGifUrl] = useState("");
     
     

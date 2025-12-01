@@ -1,41 +1,107 @@
-import React, { useContext } from "react";
+/**
+ * Componente Welcome - Página principal con formulario de transacciones
+ * @module components/Welcome
+ */
+
+import React, { useContext, useState } from "react";
 import { AiFillPlayCircle } from "react-icons/ai";
 import { SiEthereum } from "react-icons/si";
-import { BsInfoCircle } from "react-icons/bs";
+import { BsInfoCircle, BsShieldCheck, BsGlobe, BsLink45Deg } from "react-icons/bs";
+import { HiOutlineQrcode } from "react-icons/hi";
+import { BiLock, BiCoinStack } from "react-icons/bi";
 
 import { TransactionContext } from "../context/TransactionContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { Loader } from "./";
+import { QRCodeModal, CopyButton } from "./ui";
 import { shortenAddress } from "../utils/shortenAddress";
+import { formatUSD, formatETH } from "../utils/formatters";
+import { validateTransactionForm } from "../utils/validators";
 
-const Input = ({ placeholder, name, type, value, handleChange, theme }) => (
-    <input
-        placeholder={placeholder}
-        type={type}
-        step="0.0001"
-        value={value}
-        onChange={(e) => handleChange(e, name)}
-        className={`my-2 w-full rounded-lg p-3 outline-none border text-sm transition-all duration-300 ${
-            theme === 'dark' 
-                ? 'bg-transparent text-white placeholder-gray-400 border-gray-600 focus:border-[#2952e3]' 
-                : 'bg-white/90 text-gray-800 placeholder-gray-500 border-gray-300 focus:border-[#2952e3]'
-        }`} 
-    />
+/**
+ * Componente Input con validación
+ */
+const Input = ({ placeholder, name, type, value, handleChange, theme, error }) => (
+    <div className="w-full">
+        <input
+            placeholder={placeholder}
+            type={type}
+            step="0.0001"
+            value={value}
+            onChange={(e) => handleChange(e, name)}
+            className={`my-2 w-full rounded-lg p-3 outline-none border text-sm transition-all duration-300 ${
+                error 
+                    ? 'border-red-500 focus:border-red-500' 
+                    : theme === 'dark' 
+                        ? 'bg-transparent text-white placeholder-gray-400 border-gray-600 focus:border-[#2952e3]' 
+                        : 'bg-white/90 text-gray-800 placeholder-gray-500 border-gray-300 focus:border-[#2952e3]'
+            }`} 
+        />
+        {error && (
+            <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>
+        )}
+    </div>
 );
 
 const Welcome = () => {
-    const { connectWallet, currentAccount, formData, sendTransaction, handleChange, isLoading } = useContext(TransactionContext);
+    const { 
+        connectWallet, 
+        currentAccount, 
+        formData, 
+        sendTransaction, 
+        handleChange, 
+        isLoading,
+        balance,
+        ethPrice,
+        ethPriceChange
+    } = useContext(TransactionContext);
     const { theme } = useContext(ThemeContext);
+    
+    // Estados locales
+    const [showQRModal, setShowQRModal] = useState(false);
+    const [errors, setErrors] = useState({});
+    const [touched, setTouched] = useState({});
 
+    /**
+     * Maneja el envío del formulario con validación
+     */
     const handleSubmit = (e) => {
-        const { addressTo, amount, keyword, message } = formData;
-        
         e.preventDefault();
         
-        if (!addressTo || !amount || !keyword || !message) return;
+        const validation = validateTransactionForm(formData);
+        setErrors(validation.errors);
+        
+        setTouched({
+            addressTo: true,
+            amount: true,
+            keyword: true,
+            message: true,
+        });
+        
+        if (!validation.isValid) return;
         
         sendTransaction();
-    }
+    };
+
+    /**
+     * Maneja cambios en los inputs con validación en tiempo real
+     */
+    const handleInputChange = (e, name) => {
+        handleChange(e, name);
+        
+        if (touched[name]) {
+            const newFormData = { ...formData, [name]: e.target.value };
+            const validation = validateTransactionForm(newFormData);
+            setErrors(prev => ({
+                ...prev,
+                [name]: validation.errors[name]
+            }));
+        }
+    };
+
+    // Calcular valor en USD
+    const balanceInUSD = ethPrice && balance ? parseFloat(balance) * ethPrice : 0;
+
     return (
         <div className="flex w-full justify-center items-center">
             <div className="flex mf:flex-row flex-col items-start justify-between md:p-20 py-12 px-4">
@@ -48,7 +114,7 @@ const Welcome = () => {
                     <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${
                         theme === 'dark' ? 'text-white' : 'text-gray-800'
                     }`}>
-                        Explore the crypto world. Buy and sell cryptocurrencies easily on Krypto.
+                        Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
                     </p>
                     {!currentAccount && (
                         <button 
@@ -68,7 +134,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">🛡️</div>
+                                <BsShieldCheck className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Reliability</p>
@@ -82,7 +148,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">🔒</div>
+                                <BiLock className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Security</p>
@@ -96,7 +162,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">⟠</div>
+                                <SiEthereum className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-purple-400' : 'text-purple-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Ethereum</p>
@@ -110,7 +176,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">🌐</div>
+                                <BsGlobe className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Web 3.0</p>
@@ -124,7 +190,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">💰</div>
+                                <BiCoinStack className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Low Fees</p>
@@ -138,7 +204,7 @@ const Welcome = () => {
                         } backdrop-blur-sm shadow-lg hover:shadow-2xl`}>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                             <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                                <div className="text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300">⛓️</div>
+                                <BsLink45Deg className={`text-3xl mb-2 transform group-hover:scale-110 transition-transform duration-300 ${theme === 'dark' ? 'text-orange-400' : 'text-orange-600'}`} />
                                 <p className={`font-semibold text-sm sm:text-base ${
                                     theme === 'dark' ? 'text-white' : 'text-gray-900'
                                 }`}>Blockchain</p>
@@ -148,7 +214,8 @@ const Welcome = () => {
                 </div>
 
                 <div className="flex flex-col flex-[1.5] items-center justify-start w-full mf:mt-0 mt-10 mf:ml-10">
-                    <div className={`p-4 justify-end items-start flex-col rounded-xl h-44 sm:w-96 w-full my-5 animate-fadeInRight animate-float shadow-2xl ${
+                    {/* Tarjeta ETH con balance */}
+                    <div className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight animate-float shadow-2xl relative overflow-hidden ${
                         theme === 'dark' 
                             ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500' 
                             : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
@@ -158,16 +225,58 @@ const Welcome = () => {
                                 <div className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 animate-pulse-slow bg-white/20">
                                     <SiEthereum fontSize={21} color="#fff" />
                                 </div>
-                                <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
+                                <div className="flex items-center gap-2">
+                                    {currentAccount && (
+                                        <button
+                                            onClick={() => setShowQRModal(true)}
+                                            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-300 hover:scale-110"
+                                            title="Show QR to receive"
+                                        >
+                                            <HiOutlineQrcode fontSize={17} color="#fff" />
+                                        </button>
+                                    )}
+                                    <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
+                                </div>
                             </div>
 
                             <div>
-                                <p className="text-white font-light text-sm transition-all duration-300 hover:scale-105">
-                                    {shortenAddress(currentAccount)}
-                                </p>
-                                <p className="text-white font-semibold text-lg mt-1"> 
-                                    Ethereum
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    <p className="text-white font-light text-sm">
+                                        {shortenAddress(currentAccount)}
+                                    </p>
+                                    {currentAccount && (
+                                        <CopyButton 
+                                            text={currentAccount} 
+                                            theme="dark" 
+                                            size={14}
+                                            className="!text-white/70 hover:!text-white"
+                                        />
+                                    )}
+                                </div>
+                                
+                                {currentAccount && (
+                                    <div className="mt-1">
+                                        <p className="text-white font-bold text-xl">
+                                            {formatETH(balance, 4)}
+                                        </p>
+                                        {ethPrice > 0 && (
+                                            <p className="text-white/80 text-sm">
+                                                {formatUSD(balanceInUSD)}
+                                                {ethPriceChange !== 0 && (
+                                                    <span className={`ml-2 text-xs ${
+                                                        ethPriceChange >= 0 ? 'text-green-300' : 'text-red-300'
+                                                    }`}>
+                                                        {ethPriceChange >= 0 ? '+' : ''}{ethPriceChange.toFixed(2)}%
+                                                    </span>
+                                                )}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {!currentAccount && (
+                                    <p className="text-white font-semibold text-lg mt-1">Ethereum</p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -177,10 +286,42 @@ const Welcome = () => {
                             ? 'bg-[rgba(39,51,89,0.4)] backdrop-blur-lg border border-white/20' 
                             : 'bg-white/80 backdrop-blur-lg border border-gray-200'
                     }`}>
-                        <Input placeholder="Address To" name="addressTo" type="text" handleChange={handleChange} theme={theme} />
-                        <Input placeholder="Amount (ETH)" name="amount" type="number" handleChange={handleChange} theme={theme} />
-                        <Input placeholder="Keyword (Gif)" name="keyword" type="text" handleChange={handleChange} theme={theme} />
-                        <Input placeholder="Enter Message" name="message" type="text" handleChange={handleChange} theme={theme} />
+                        <Input 
+                            placeholder="Address To (0x...)" 
+                            name="addressTo" 
+                            type="text" 
+                            value={formData.addressTo}
+                            handleChange={handleInputChange} 
+                            theme={theme}
+                            error={touched.addressTo && errors.addressTo}
+                        />
+                        <Input 
+                            placeholder="Amount (ETH)" 
+                            name="amount" 
+                            type="number" 
+                            value={formData.amount}
+                            handleChange={handleInputChange} 
+                            theme={theme}
+                            error={touched.amount && errors.amount}
+                        />
+                        <Input 
+                            placeholder="Keyword (Gif)" 
+                            name="keyword" 
+                            type="text" 
+                            value={formData.keyword}
+                            handleChange={handleInputChange} 
+                            theme={theme}
+                            error={touched.keyword && errors.keyword}
+                        />
+                        <Input 
+                            placeholder="Enter Message" 
+                            name="message" 
+                            type="text" 
+                            value={formData.message}
+                            handleChange={handleInputChange} 
+                            theme={theme}
+                            error={touched.message && errors.message}
+                        />
 
                         <div className={`h-[1px] ${theme === 'dark' ? 'bg-gray-400' : 'bg-gray-300'} w-full my-2`} />
 
@@ -190,22 +331,31 @@ const Welcome = () => {
                             <button
                                 type="button"
                                 onClick={handleSubmit}
+                                disabled={!currentAccount}
                                 className={`w-full mt-2 p-3 rounded-full cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg font-semibold ${
+                                    !currentAccount ? 'opacity-50 cursor-not-allowed' : ''
+                                } ${
                                     theme === 'dark' 
                                         ? 'text-white bg-[#2952e3] hover:bg-[#2546bd] border-transparent' 
                                         : 'text-white bg-gradient-to-r from-[#2952e3] to-[#8945F8] hover:from-[#2546bd] hover:to-[#7a3ee6] border-transparent shadow-md'
                                 }`}
                             >
-                                Send Now
+                                {currentAccount ? 'Send Now' : 'Connect Wallet First'}
                             </button>
                         )}
                     </div> 
                 </div>
             </div>
-        </div>
 
+            {/* Modal QR */}
+            <QRCodeModal
+                isOpen={showQRModal}
+                onClose={() => setShowQRModal(false)}
+                address={currentAccount}
+                theme={theme}
+            />
+        </div>
     );
 }
-
 
 export default Welcome;
