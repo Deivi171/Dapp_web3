@@ -48,7 +48,7 @@ const Welcome = () => {
                     <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${
                         theme === 'dark' ? 'text-white' : 'text-gray-800'
                     }`}>
-                        Explore the crypto world. Buy and sell cryptocurrencies easily on Krypto.
+                        Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
                     </p>
                     {!currentAccount && (
                         <button 
