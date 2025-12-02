@@ -76,7 +76,7 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                 border-2
                 ${isHovered ? 'shadow-2xl shadow-purple-500/20' : 'shadow-lg'}
                 ${theme === 'dark'
-                    ? `bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm border-gray-700 ${isHovered ? 'border-[#2952e3]' : ''}`
+                    ? `bg-white/5 backdrop-blur-md border-white/10 ${isHovered ? 'border-[#2952e3]' : ''}`
                     : `bg-white/50 backdrop-blur-md border-white/40 ${isHovered ? 'border-[#2952e3]' : ''} shadow-lg`
                 }
             `}>
@@ -187,12 +187,12 @@ const Transactions = () => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${currentPage === 1
+                                    className={`px-6 py-2 rounded-full transition-all duration-300 font-semibold ${currentPage === 1
                                             ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:scale-105 active:scale-95'
+                                            : 'hover:scale-105 active:scale-95 hover:shadow-lg'
                                         } ${theme === 'dark'
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20'
+                                            : 'bg-white/50 backdrop-blur-md border border-white/40 text-gray-800 hover:bg-white/70'
                                         }`}
                                 >
                                     Previous
@@ -205,12 +205,12 @@ const Transactions = () => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(sortedTransactions.length / itemsPerPage)))}
                                     disabled={currentPage === Math.ceil(sortedTransactions.length / itemsPerPage)}
-                                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${currentPage === Math.ceil(sortedTransactions.length / itemsPerPage)
+                                    className={`px-6 py-2 rounded-full transition-all duration-300 font-semibold ${currentPage === Math.ceil(sortedTransactions.length / itemsPerPage)
                                             ? 'opacity-50 cursor-not-allowed'
-                                            : 'hover:scale-105 active:scale-95'
+                                            : 'hover:scale-105 active:scale-95 hover:shadow-lg'
                                         } ${theme === 'dark'
-                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                                            ? 'bg-gradient-to-r from-[#2952e3] to-[#8945F8] text-white hover:shadow-purple-500/30'
+                                            : 'bg-gradient-to-r from-[#2952e3] to-[#8945F8] text-white hover:shadow-purple-500/30'
                                         }`}
                                 >
                                     Next
