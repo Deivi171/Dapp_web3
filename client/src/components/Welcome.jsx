@@ -30,13 +30,12 @@ const Input = ({ placeholder, name, type, value, handleChange, theme, error }) =
             step="0.0001"
             value={value}
             onChange={(e) => handleChange(e, name)}
-            className={`my-2 w-full rounded-lg p-3 outline-none border text-sm transition-all duration-300 ${
-                error 
-                    ? 'border-red-500 focus:border-red-500' 
-                    : theme === 'dark' 
-                        ? 'bg-transparent text-white placeholder-gray-400 border-gray-600 focus:border-[#2952e3]' 
+            className={`my-2 w-full rounded-lg p-3 outline-none border text-sm transition-all duration-300 ${error
+                    ? 'border-red-500 focus:border-red-500'
+                    : theme === 'dark'
+                        ? 'bg-transparent text-white placeholder-gray-400 border-gray-600 focus:border-[#2952e3]'
                         : 'bg-white/90 text-gray-800 placeholder-gray-500 border-gray-300 focus:border-[#2952e3]'
-            }`} 
+                }`}
         />
         {error && (
             <p className="text-red-500 text-xs mt-1 ml-1">{error}</p>
@@ -45,19 +44,19 @@ const Input = ({ placeholder, name, type, value, handleChange, theme, error }) =
 );
 
 const Welcome = () => {
-    const { 
-        connectWallet, 
-        currentAccount, 
-        formData, 
-        sendTransaction, 
-        handleChange, 
+    const {
+        connectWallet,
+        currentAccount,
+        formData,
+        sendTransaction,
+        handleChange,
         isLoading,
         balance,
         ethPrice,
         ethPriceChange
     } = useContext(TransactionContext);
     const { theme } = useContext(ThemeContext);
-    
+
     // Estados locales
     const [showQRModal, setShowQRModal] = useState(false);
     const [errors, setErrors] = useState({});
@@ -68,19 +67,19 @@ const Welcome = () => {
      */
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         const validation = validateTransactionForm(formData);
         setErrors(validation.errors);
-        
+
         setTouched({
             addressTo: true,
             amount: true,
             keyword: true,
             message: true,
         });
-        
+
         if (!validation.isValid) return;
-        
+
         sendTransaction();
     };
 
@@ -89,7 +88,7 @@ const Welcome = () => {
      */
     const handleInputChange = (e, name) => {
         handleChange(e, name);
-        
+
         if (touched[name]) {
             const newFormData = { ...formData, [name]: e.target.value };
             const validation = validateTransactionForm(newFormData);
@@ -106,7 +105,7 @@ const Welcome = () => {
     // Estados para efecto 3D de la tarjeta ETH
     const x = useMotionValue(0);
     const y = useMotionValue(0);
-    
+
     const springConfig = { damping: 20, stiffness: 300 };
     const rotateX = useSpring(useTransform(y, [-100, 100], [15, -15]), springConfig);
     const rotateY = useSpring(useTransform(x, [-100, 100], [-15, 15]), springConfig);
@@ -136,25 +135,23 @@ const Welcome = () => {
     return (
         <div className="flex w-full justify-center items-center">
             <div className="flex mf:flex-row flex-col items-start justify- md:p-20 py-12 px-4">
-                <div className="flex flex-1 justify-start items-start flex-col mf:mr-10">  
-                    <h1 className={`text-3xl sm:text-5xl py-1 animate-fadeInLeft font-bold ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>
-                        <GradientText 
+                <div className="flex flex-1 justify-start items-start flex-col mf:mr-10">
+                    <h1 className={`text-3xl sm:text-5xl py-1 animate-fadeInLeft font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
+                        }`}>
+                        <GradientText
                             colors={["#2952e3", "#8945F8", "#FF6B6B", "#4ECDC4", "#2952e3"]}
                             animationSpeed={8}
                             className="font-bold"
-                        > Send Crypto 
-                        <br />
-                        across the world </GradientText>
+                        > Send Crypto
+                            <br />
+                            across the world </GradientText>
 
-                            <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${
-                            theme === 'dark' ? 'text-white' : 'text-gray-800'
+                        <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${theme === 'dark' ? 'text-white' : 'text-gray-800'
                             }`}>
                             Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
-                            </p> 
+                        </p>
                         <br /><br />
-                        </h1>
+                    </h1>
                 </div>
 
                 <div className="flex flex-col flex-[1.5] items-center justify-start w-full mf:mt-0 mt-10 mf:ml-10">
@@ -171,11 +168,10 @@ const Welcome = () => {
                             transformStyle: "preserve-3d",
                             perspective: 1000,
                         }}
-                        className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight shadow-2xl relative overflow-hidden cursor-pointer ${
-                            theme === 'dark' 
-                                ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500' 
+                        className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight shadow-2xl relative overflow-hidden cursor-pointer ${theme === 'dark'
+                                ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500'
                                 : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
-                        }`}
+                            }`}
                     >
                         {/* Capa de brillo para efecto 3D */}
                         <motion.div
@@ -184,17 +180,17 @@ const Welcome = () => {
                             }}
                             className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none"
                         />
-                        
+
                         <div className="flex justify-between flex-col w-full h-full" style={{ transform: "translateZ(30px)" }}>
                             <div className="flex justify-between items-start">
-                                <motion.div 
+                                <motion.div
                                     style={{ translateZ: 60 }}
                                     className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 animate-pulse-slow bg-white/20"
                                 >
                                     <SiEthereum fontSize={21} color="#fff" />
                                 </motion.div>
                                 <div className="flex items-center gap-2">
-                                    
+
                                     <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
                                 </div>
                             </div>
@@ -205,15 +201,15 @@ const Welcome = () => {
                                         {shortenAddress(currentAccount)}
                                     </p>
                                     {currentAccount && (
-                                        <CopyButton 
-                                            text={currentAccount} 
-                                            theme="dark" 
+                                        <CopyButton
+                                            text={currentAccount}
+                                            theme="dark"
                                             size={14}
                                             className="!text-white/70 hover:!text-white"
                                         />
                                     )}
                                 </div>
-                                
+
                                 {currentAccount && (
                                     <div className="mt-1">
                                         <p className="text-white font-bold text-xl">
@@ -223,9 +219,8 @@ const Welcome = () => {
                                             <p className="text-white/80 text-sm">
                                                 {formatUSD(balanceInUSD)}
                                                 {ethPriceChange !== 0 && (
-                                                    <span className={`ml-2 text-xs ${
-                                                        ethPriceChange >= 0 ? 'text-green-300' : 'text-red-300'
-                                                    }`}>
+                                                    <span className={`ml-2 text-xs ${ethPriceChange >= 0 ? 'text-green-300' : 'text-red-300'
+                                                        }`}>
                                                         {ethPriceChange >= 0 ? '+' : ''}{ethPriceChange.toFixed(2)}%
                                                     </span>
                                                 )}
@@ -233,7 +228,7 @@ const Welcome = () => {
                                         )}
                                     </div>
                                 )}
-                                
+
                                 {!currentAccount && (
                                     <p className="text-white font-semibold text-lg mt-1">Ethereum</p>
                                 )}
@@ -241,44 +236,43 @@ const Welcome = () => {
                         </div>
                     </motion.div>
 
-                    <div className={`p-6 sm:w-[450px] w-full flex flex-col justify-start items-center animate-fadeInRight delay-200 shadow-xl rounded-2xl transition-all duration-300 ${
-                        theme === 'dark' 
-                            ? 'bg-[rgba(39,51,89,0.4)] backdrop-blur-lg border border-white/20' 
+                    <div className={`p-6 sm:w-[450px] w-full flex flex-col justify-start items-center animate-fadeInRight delay-200 shadow-xl rounded-2xl transition-all duration-300 relative z-10 ${theme === 'dark'
+                            ? 'bg-[rgba(39,51,89,0.4)] backdrop-blur-lg border border-white/20'
                             : 'bg-white/80 backdrop-blur-lg border border-gray-200'
-                    }`}>
-                        <Input 
-                            placeholder="Address To (0x...)" 
-                            name="addressTo" 
-                            type="text" 
+                        }`}>
+                        <Input
+                            placeholder="Address To (0x...)"
+                            name="addressTo"
+                            type="text"
                             value={formData.addressTo}
-                            handleChange={handleInputChange} 
+                            handleChange={handleInputChange}
                             theme={theme}
                             error={touched.addressTo && errors.addressTo}
                         />
-                        <Input 
-                            placeholder="Amount (ETH)" 
-                            name="amount" 
-                            type="number" 
+                        <Input
+                            placeholder="Amount (ETH)"
+                            name="amount"
+                            type="number"
                             value={formData.amount}
-                            handleChange={handleInputChange} 
+                            handleChange={handleInputChange}
                             theme={theme}
                             error={touched.amount && errors.amount}
                         />
-                        <Input 
-                            placeholder="Keyword (Gif)" 
-                            name="keyword" 
-                            type="text" 
+                        <Input
+                            placeholder="Keyword (Gif)"
+                            name="keyword"
+                            type="text"
                             value={formData.keyword}
-                            handleChange={handleInputChange} 
+                            handleChange={handleInputChange}
                             theme={theme}
                             error={touched.keyword && errors.keyword}
                         />
-                        <Input 
-                            placeholder="Enter Message" 
-                            name="message" 
-                            type="text" 
+                        <Input
+                            placeholder="Enter Message"
+                            name="message"
+                            type="text"
                             value={formData.message}
-                            handleChange={handleInputChange} 
+                            handleChange={handleInputChange}
                             theme={theme}
                             error={touched.message && errors.message}
                         />
@@ -287,23 +281,21 @@ const Welcome = () => {
 
                         {isLoading ? (
                             <Loader />
-                        ) : ( 
+                        ) : (
                             <button
                                 type="button"
                                 onClick={handleSubmit}
                                 disabled={!currentAccount}
-                                className={`w-full mt-2 p-3 rounded-full cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg font-semibold ${
-                                    !currentAccount ? 'opacity-50 cursor-not-allowed' : ''
-                                } ${
-                                    theme === 'dark' 
-                                        ? 'text-white bg-[#2952e3] hover:bg-[#2546bd] border-transparent' 
+                                className={`w-full mt-2 p-3 rounded-full cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg font-semibold ${!currentAccount ? 'opacity-50 cursor-not-allowed' : ''
+                                    } ${theme === 'dark'
+                                        ? 'text-white bg-[#2952e3] hover:bg-[#2546bd] border-transparent'
                                         : 'text-white bg-gradient-to-r from-[#2952e3] to-[#8945F8] hover:from-[#2546bd] hover:to-[#7a3ee6] border-transparent shadow-md'
-                                }`}
+                                    }`}
                             >
                                 {currentAccount ? 'Send Now' : 'Connect Wallet First'}
                             </button>
                         )}
-                    </div> 
+                    </div>
                 </div>
             </div>
 

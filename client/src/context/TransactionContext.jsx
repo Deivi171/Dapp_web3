@@ -37,7 +37,7 @@ const getEthereumContract = async () => {
  */
 const getBalance = async (address) => {
     if (!ethereum || !address) return "0";
-    
+
     try {
         const provider = new ethers.BrowserProvider(ethereum);
         const balanceWei = await provider.getBalance(address);
@@ -54,7 +54,7 @@ export const TransactionProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [transactionCount, setTransactionCount] = useState(localStorage.getItem('transactionCount'));
     const [transactions, setTransactions] = useState([]);
-    
+
     // Nuevos estados para balance y precio
     const [balance, setBalance] = useState("0");
     const [ethPrice, setEthPrice] = useState(0);
@@ -93,7 +93,7 @@ export const TransactionProvider = ({ children }) => {
     const getAllTransactions = async () => {
         try {
             if (!ethereum) return toast.error("Por favor instala MetaMask");
-            
+
             const transactionContract = await getEthereumContract();
             const availableTransactions = await transactionContract.getAllTransactions();
 
@@ -101,11 +101,14 @@ export const TransactionProvider = ({ children }) => {
                 addressTo: transaction.receiver,
                 addressFrom: transaction.sender,
                 timestamp: new Date(Number(transaction.timestamp) * 1000).toLocaleString(),
+                timestampInt: Number(transaction.timestamp),
                 message: transaction.message,
                 keyword: transaction.keyword,
                 amount: Number(ethers.formatEther(transaction.amount)),
             }));
 
+            // Ordenar por timestampInt descendente (más reciente primero)
+            structuredTransactions.sort((a, b) => b.timestampInt - a.timestampInt);
             setTransactions(structuredTransactions);
         } catch (error) {
             console.error("Error fetching transactions:", error);
@@ -136,7 +139,7 @@ export const TransactionProvider = ({ children }) => {
     const checkIfTransactionsExists = async () => {
         try {
             if (!ethereum) return;
-            
+
             const transactionContract = await getEthereumContract();
             const transactionsCount = await transactionContract.getTransactionCount();
             window.localStorage.setItem("transactionCount", transactionsCount.toString());
@@ -156,12 +159,12 @@ export const TransactionProvider = ({ children }) => {
             }
 
             toast.loading("Conectando wallet...", { id: "connect" });
-            
+
             const accounts = await ethereum.request({ method: "eth_requestAccounts" });
             setCurrentAccount(accounts[0]);
-            
+
             toast.success("¡Wallet conectada!", { id: "connect" });
-            
+
             await getAllTransactions();
         } catch (error) {
             console.error("Error connecting wallet:", error);
@@ -192,7 +195,7 @@ export const TransactionProvider = ({ children }) => {
             }
 
             const { addressTo, amount, keyword, message } = formData;
-            
+
             if (!currentAccount) {
                 toast.error("Por favor conecta tu wallet");
                 return;
@@ -219,19 +222,19 @@ export const TransactionProvider = ({ children }) => {
 
             setIsLoading(true);
             toast.loading("Procesando en blockchain...", { id: "tx" });
-            
+
             await tx.wait();
-            
+
             setIsLoading(false);
             toast.success("¡Transacción exitosa! 🎉", { id: "tx" });
 
             const transactionsCount = await transactionContract.getTransactionCount();
             setTransactionCount(Number(transactionsCount));
-            
+
             // Actualizar balance y transacciones
             await updateBalance();
             await getAllTransactions();
-            
+
             // Limpiar formulario
             setFormData({ addressTo: '', amount: '', keyword: '', message: '' });
 
@@ -250,7 +253,7 @@ export const TransactionProvider = ({ children }) => {
 
         // Actualizar precio cada minuto
         const priceInterval = setInterval(updateEthPrice, 60000);
-        
+
         return () => clearInterval(priceInterval);
     }, []);
 
@@ -258,7 +261,7 @@ export const TransactionProvider = ({ children }) => {
     useEffect(() => {
         if (currentAccount) {
             updateBalance();
-            
+
             // Actualizar balance cada 30 segundos
             const balanceInterval = setInterval(updateBalance, 30000);
             return () => clearInterval(balanceInterval);
@@ -280,7 +283,7 @@ export const TransactionProvider = ({ children }) => {
             };
 
             ethereum.on('accountsChanged', handleAccountsChanged);
-            
+
             return () => {
                 ethereum.removeListener('accountsChanged', handleAccountsChanged);
             };
@@ -288,29 +291,29 @@ export const TransactionProvider = ({ children }) => {
     }, []);
 
     return (
-        <TransactionContext.Provider 
-            value={{ 
+        <TransactionContext.Provider
+            value={{
                 // Wallet
                 connectWallet,
                 disconnectWallet,
                 currentAccount,
                 balance,
-                
+
                 // Precio ETH
                 ethPrice,
                 ethPriceChange,
-                
+
                 // Formulario
-                formData, 
-                setFormData, 
+                formData,
+                setFormData,
                 handleChange,
-                
+
                 // Transacciones
-                sendTransaction, 
-                transactions, 
+                sendTransaction,
+                transactions,
                 transactionCount,
                 isLoading,
-                
+
                 // Utilidades
                 updateBalance,
                 getAllTransactions,
