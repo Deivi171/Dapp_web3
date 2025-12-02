@@ -1,27 +1,16 @@
-/**
- * Componente Welcome - Página principal con formulario de transacciones
- * @module components/Welcome
- */
-
 import React, { useContext, useState } from "react";
-import { AiFillPlayCircle } from "react-icons/ai";
 import { SiEthereum } from "react-icons/si";
-import { BsInfoCircle, BsShieldCheck, BsGlobe, BsLink45Deg } from "react-icons/bs";
-import { HiOutlineQrcode } from "react-icons/hi";
-import { BiLock, BiCoinStack } from "react-icons/bi";
+import { BsInfoCircle } from "react-icons/bs";
 import { motion, useMotionValue, useSpring } from "motion/react";
 
 import { TransactionContext } from "../context/TransactionContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { Loader } from "./";
-import { QRCodeModal, CopyButton, GradientText } from "./ui";
+import { CopyButton, GradientText } from "./ui";
 import { shortenAddress } from "../utils/shortenAddress";
 import { formatUSD, formatETH } from "../utils/formatters";
 import { validateTransactionForm } from "../utils/validators";
 
-/**
- * Componente Input con validación
- */
 const Input = ({ placeholder, name, type, value, handleChange, theme, error }) => (
     <div className="w-full">
         <input
@@ -34,7 +23,7 @@ const Input = ({ placeholder, name, type, value, handleChange, theme, error }) =
                     ? 'border-red-500 focus:border-red-500'
                     : theme === 'dark'
                         ? 'bg-transparent text-white placeholder-gray-400 border-gray-600 focus:border-[#2952e3]'
-                        : 'bg-white/90 text-gray-800 placeholder-gray-500 border-gray-300 focus:border-[#2952e3]'
+                        : 'bg-white/40 text-gray-800 placeholder-gray-500 border-gray-300/50 focus:border-[#2952e3]'
                 }`}
         />
         {error && (
@@ -57,14 +46,9 @@ const Welcome = () => {
     } = useContext(TransactionContext);
     const { theme } = useContext(ThemeContext);
 
-    // Estados locales
-    const [showQRModal, setShowQRModal] = useState(false);
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
 
-    /**
-     * Maneja el envío del formulario con validación
-     */
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -83,9 +67,6 @@ const Welcome = () => {
         sendTransaction();
     };
 
-    /**
-     * Maneja cambios en los inputs con validación en tiempo real
-     */
     const handleInputChange = (e, name) => {
         handleChange(e, name);
 
@@ -99,10 +80,8 @@ const Welcome = () => {
         }
     };
 
-    // Calcular valor en USD
     const balanceInUSD = ethPrice && balance ? parseFloat(balance) * ethPrice : 0;
 
-    // Estados para efecto 3D tipo TiltedCard
     const cardRef = React.useRef(null);
     const rotateAmplitude = 14;
     
@@ -162,7 +141,6 @@ const Welcome = () => {
                 </div>
 
                 <div className="flex flex-col flex-[1.5] items-center justify-start w-full mf:mt-0 mt-10 mf:ml-10">
-                    {/* Tarjeta ETH con balance - Efecto TiltedCard */}
                     <figure
                         ref={cardRef}
                         className="relative [perspective:800px] flex items-center justify-center my-5"
@@ -179,12 +157,11 @@ const Welcome = () => {
                             }}
                         >
                             <div
-                                className={`p-4 flex flex-col justify-between rounded-xl h-48 sm:w-96 w-full shadow-2xl relative overflow-hidden cursor-pointer ${theme === 'dark'
+                                className={`p-4 flex flex-col justify-between rounded-xl h-48 w-80 sm:w-96 shadow-2xl relative overflow-hidden cursor-pointer ${theme === 'dark'
                                     ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500'
                                     : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
                                 }`}
                             >
-                                {/* Glare effect */}
                                 <motion.div
                                     className="absolute inset-0 pointer-events-none"
                                     style={{
@@ -249,7 +226,7 @@ const Welcome = () => {
 
                     <div className={`p-6 sm:w-[450px] w-full flex flex-col justify-start items-center animate-fadeInRight delay-200 shadow-xl rounded-2xl transition-all duration-300 relative z-10 ${theme === 'dark'
                             ? 'bg-[rgba(39,51,89,0.4)] backdrop-blur-lg border border-white/20'
-                            : 'bg-white/80 backdrop-blur-lg border border-gray-200'
+                            : 'bg-white/50 backdrop-blur-lg border border-white/40 shadow-lg'
                         }`}>
                         <Input
                             placeholder="Address To (0x...)"
@@ -309,14 +286,6 @@ const Welcome = () => {
                     </div>
                 </div>
             </div>
-
-            {/* Modal QR */}
-            <QRCodeModal
-                isOpen={showQRModal}
-                onClose={() => setShowQRModal(false)}
-                address={currentAccount}
-                theme={theme}
-            />
         </div>
     );
 }

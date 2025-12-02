@@ -1,8 +1,3 @@
-/**
- * Componente Transactions - Muestra el historial de transacciones
- * @module components/Transactions
- */
-
 import React, { useContext, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import { TransactionContext } from '../context/TransactionContext';
@@ -20,14 +15,10 @@ const springValues = {
     mass: 2
 };
 
-/**
- * Tarjeta de transaccion individual con efecto 3D
- */
 const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, amount, url, theme, ethPrice }) => {
     const gifUrl = useFetch({ keyword });
     const amountInUSD = ethPrice ? parseFloat(amount) * ethPrice : 0;
 
-    // Refs y estados para el efecto 3D
     const ref = useRef(null);
     const rotateX = useSpring(useMotionValue(0), springValues);
     const rotateY = useSpring(useMotionValue(0), springValues);
@@ -86,7 +77,7 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                 ${isHovered ? 'shadow-2xl shadow-purple-500/20' : 'shadow-lg'}
                 ${theme === 'dark'
                     ? `bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm border-gray-700 ${isHovered ? 'border-[#2952e3]' : ''}`
-                    : `bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-gray-300 ${isHovered ? 'border-[#2952e3]' : ''} shadow-lg`
+                    : `bg-white/50 backdrop-blur-md border-white/40 ${isHovered ? 'border-[#2952e3]' : ''} shadow-lg`
                 }
             `}>
             <div className="flex flex-col items-center w-full mt-2" style={{ transform: 'translateZ(20px)' }}>
@@ -106,7 +97,7 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                         <CopyButton text={addressTo} theme={theme} size={12} />
                     </div>
 
-                    <div className={`mt-3 px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'
+                    <div className={`mt-3 px-2 py-1 rounded-lg ${theme === 'dark' ? 'bg-white/10' : 'bg-white/40'
                         }`}>
                         <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
                             }`}>{formatETH(amount, 4)}</p>
@@ -123,7 +114,6 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                     )}
                 </div>
 
-                {/* Imagen con efecto de profundidad */}
                 <div className="w-full h-48 rounded-lg overflow-hidden" style={{ transform: 'translateZ(40px)' }}>
                     <img
                         src={gifUrl || url}
@@ -149,18 +139,13 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
     );
 }
 
-/**
- * Componente principal de transacciones
- */
 const Transactions = () => {
     const { currentAccount, transactions, ethPrice } = useContext(TransactionContext);
     const { theme } = useContext(ThemeContext);
 
-    // Estado para paginación
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 3;
 
-    // Ordenar transacciones (más recientes primero)
     const sortedTransactions = [...transactions].sort((a, b) => {
         const dateA = new Date(a.timestamp).getTime();
         const dateB = new Date(b.timestamp).getTime();
@@ -176,7 +161,6 @@ const Transactions = () => {
                             Latest Transactions
                         </h3>
 
-                        {/* Stats Dashboard */}
                         {transactions.length > 0 && (
                             <Stats
                                 transactions={transactions}
@@ -198,7 +182,6 @@ const Transactions = () => {
                             ))}
                         </div>
 
-                        {/* Pagination Controls */}
                         {sortedTransactions.length > itemsPerPage && (
                             <div className="flex justify-center items-center mt-8 gap-4">
                                 <button
@@ -235,7 +218,6 @@ const Transactions = () => {
                             </div>
                         )}
 
-                        {/* Mensaje cuando no hay transacciones */}
                         {transactions.length === 0 && (
                             <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                 <p className="text-lg">No transactions yet</p>

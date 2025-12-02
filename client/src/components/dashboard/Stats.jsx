@@ -1,19 +1,11 @@
-/**
- * Componente Stats - Dashboard con estadisticas de transacciones
- * @module components/dashboard/Stats
- */
-
 import React, { useMemo } from 'react';
 import { formatUSD, formatETH } from '../../utils/formatters';
 
-/**
- * Tarjeta individual de estadistica
- */
 const StatCard = ({ title, value, subtitle, theme, className = '' }) => (
     <div className={`p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
         theme === 'dark' 
             ? 'bg-white/5 border border-white/10 hover:border-white/20' 
-            : 'bg-white border border-gray-200 hover:border-gray-300 shadow-md'
+            : 'bg-white/50 backdrop-blur-md border border-white/40 hover:border-white/60 shadow-lg'
     } ${className}`}>
         <p className={`text-xs uppercase tracking-wide ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
@@ -29,9 +21,6 @@ const StatCard = ({ title, value, subtitle, theme, className = '' }) => (
     </div>
 );
 
-/**
- * Dashboard de estadisticas
- */
 const Stats = ({ transactions, currentAccount, ethPrice, theme }) => {
     const stats = useMemo(() => {
         if (!transactions || transactions.length === 0) {

@@ -41,7 +41,7 @@ const Navbar = () => {
                 {/* Botón de cambio de tema */}
                 <li 
                     onClick={toggleTheme}
-                    className={`${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white hover:bg-gray-100'} p-3 mx-4 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 shadow-lg`}
+                    className={`${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-white/50 backdrop-blur-md hover:bg-white/70'} p-3 mx-4 rounded-full cursor-pointer transition-all duration-300 hover:scale-110 shadow-lg`}
                 >
                     {theme === 'dark' ? <BsSun fontSize={20} className="text-yellow-400" /> : <BsMoon fontSize={20} className="text-blue-600" />}
                 </li>
@@ -72,7 +72,7 @@ const Navbar = () => {
                     {/* Botón de tema en móvil */}
                     <button 
                         onClick={toggleTheme}
-                        className={`${theme === 'dark' ? 'bg-gray-700 text-yellow-400' : 'bg-white text-blue-600'} p-2 mr-4 rounded-full transition-all duration-300`}
+                        className={`${theme === 'dark' ? 'bg-gray-700 text-yellow-400' : 'bg-white/50 backdrop-blur-md text-blue-600'} p-2 mr-4 rounded-full transition-all duration-300`}
                     >
                         {theme === 'dark' ? <BsSun fontSize={20} /> : <BsMoon fontSize={20} />}
                     </button>
