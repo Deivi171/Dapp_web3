@@ -9,6 +9,8 @@ import { ethers } from "ethers";
 import toast from "react-hot-toast";
 import { contractABI, contractAddress } from "../utils/constants";
 import { getEthPrice } from "../services/coingecko";
+import { BsHandIndexThumb } from "react-icons/bs";
+import { SiHandshake, SiHandshakeProtocol } from "react-icons/si";
 
 export const TransactionContext = React.createContext();
 
@@ -176,7 +178,7 @@ export const TransactionProvider = ({ children }) => {
         setCurrentAccount('');
         setBalance("0");
         setTransactions([]);
-        toast("Wallet desconectada", { icon: "👋" });
+        toast("Wallet desconectada", { icon: <SiHandshakeProtocol /> });
     };
 
     /**
