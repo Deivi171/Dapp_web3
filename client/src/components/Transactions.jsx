@@ -3,18 +3,16 @@
  * @module components/Transactions
  */
 
-import React, { useContext, useMemo, useState, useRef } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
 import { TransactionContext } from '../context/TransactionContext';
 import { ThemeContext } from '../context/ThemeContext';
 
-import dummyData from '../utils/dummyData';
 import { shortenAddress } from '../utils/shortenAddress';
 import { formatDate, formatETH, formatUSD } from '../utils/formatters';
-import { exportToCSV, exportToJSON } from '../utils/exportData';
 import useFetch from '../hooks/useFetch';
 import { CopyButton } from './ui';
-import { Stats, TransactionFilters } from './dashboard';
+import { Stats } from './dashboard';
 
 const springValues = {
     damping: 30,
@@ -158,77 +156,16 @@ const Transactions = () => {
     const { currentAccount, transactions, ethPrice } = useContext(TransactionContext);
     const { theme } = useContext(ThemeContext);
 
-    // Estados para filtros
-    const [searchTerm, setSearchTerm] = useState('');
-    const [sortOrder, setSortOrder] = useState('newest');
-    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+    // Estado para paginación
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 3;
 
-    // Filtrar y ordenar transacciones
-    const filteredTransactions = useMemo(() => {
-        let result = [...transactions];
-
-        // Filtrar por busqueda
-        if (searchTerm) {
-            const search = searchTerm.toLowerCase();
-            result = result.filter(tx =>
-                tx.addressFrom?.toLowerCase().includes(search) ||
-                tx.addressTo?.toLowerCase().includes(search) ||
-                tx.message?.toLowerCase().includes(search) ||
-                tx.keyword?.toLowerCase().includes(search)
-            );
-        }
-
-        // Filtrar por rango de fechas
-        if (dateRange.start) {
-            const startDate = new Date(dateRange.start).getTime();
-            result = result.filter(tx => {
-                const txDate = new Date(tx.timestamp).getTime();
-                return txDate >= startDate;
-            });
-        }
-        if (dateRange.end) {
-            const endDate = new Date(dateRange.end).getTime() + 86400000;
-            result = result.filter(tx => {
-                const txDate = new Date(tx.timestamp).getTime();
-                return txDate <= endDate;
-            });
-        }
-
-        // Ordenar
-        result.sort((a, b) => {
-            const dateA = new Date(a.timestamp).getTime();
-            const dateB = new Date(b.timestamp).getTime();
-            return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-        });
-
-        return result;
-    }, [transactions, searchTerm, sortOrder, dateRange]);
-
-    // Handlers para export
-    const handleExportCSV = () => {
-        exportToCSV(filteredTransactions, 'transactions');
-    };
-
-    const handleExportJSON = () => {
-        exportToJSON(filteredTransactions, 'transactions');
-    };
-
-    const handleFilterChange = (filterType, value) => {
-        if (filterType === 'search') setSearchTerm(value);
-        else if (filterType === 'sort') setSortOrder(value);
-        else if (filterType === 'dateStart') setDateRange(prev => ({ ...prev, start: value }));
-        else if (filterType === 'dateEnd') setDateRange(prev => ({ ...prev, end: value }));
-        setCurrentPage(1);
-    };
-
-    const handleClearFilters = () => {
-        setSearchTerm('');
-        setSortOrder('newest');
-        setDateRange({ start: '', end: '' });
-        setCurrentPage(1);
-    };
+    // Ordenar transacciones (más recientes primero)
+    const sortedTransactions = [...transactions].sort((a, b) => {
+        const dateA = new Date(a.timestamp).getTime();
+        const dateB = new Date(b.timestamp).getTime();
+        return dateB - dateA;
+    });
 
     return (
         <div className="flex w-full justify-center items-center 2xl:px-20">
@@ -249,37 +186,8 @@ const Transactions = () => {
                             />
                         )}
 
-                        {/* Filtros y Export */}
-                        {transactions.length > 0 && (
-                            <TransactionFilters
-                                searchTerm={searchTerm}
-                                sortOrder={sortOrder}
-                                dateRange={dateRange}
-                                onFilterChange={handleFilterChange}
-                                onClearFilters={handleClearFilters}
-                                onExportCSV={handleExportCSV}
-                                onExportJSON={handleExportJSON}
-                                theme={theme}
-                                totalResults={filteredTransactions.length}
-                                totalTransactions={transactions.length}
-                            />
-                        )}
-
-                        {/* Mensaje cuando no hay resultados de filtro */}
-                        {transactions.length > 0 && filteredTransactions.length === 0 && (
-                            <div className={`text-center py-12 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                                <p className="text-lg">No transactions match your filters</p>
-                                <button
-                                    onClick={handleClearFilters}
-                                    className="mt-3 text-blue-500 hover:text-blue-600 underline"
-                                >
-                                    Clear filters
-                                </button>
-                            </div>
-                        )}
-
                         <div className="flex flex-wrap justify-center items-center mt-6">
-                            {[...filteredTransactions].slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((transaction, i) => (
+                            {sortedTransactions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((transaction, i) => (
                                 <div
                                     key={i}
                                     className={`animate-fadeInUp`}
@@ -291,7 +199,7 @@ const Transactions = () => {
                         </div>
 
                         {/* Pagination Controls */}
-                        {filteredTransactions.length > itemsPerPage && (
+                        {sortedTransactions.length > itemsPerPage && (
                             <div className="flex justify-center items-center mt-8 gap-4">
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -308,13 +216,13 @@ const Transactions = () => {
                                 </button>
 
                                 <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-                                    Page {currentPage} of {Math.ceil(filteredTransactions.length / itemsPerPage)}
+                                    Page {currentPage} of {Math.ceil(sortedTransactions.length / itemsPerPage)}
                                 </span>
 
                                 <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredTransactions.length / itemsPerPage)))}
-                                    disabled={currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)}
-                                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${currentPage === Math.ceil(filteredTransactions.length / itemsPerPage)
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(sortedTransactions.length / itemsPerPage)))}
+                                    disabled={currentPage === Math.ceil(sortedTransactions.length / itemsPerPage)}
+                                    className={`px-4 py-2 rounded-lg transition-all duration-300 ${currentPage === Math.ceil(sortedTransactions.length / itemsPerPage)
                                             ? 'opacity-50 cursor-not-allowed'
                                             : 'hover:scale-105 active:scale-95'
                                         } ${theme === 'dark'
