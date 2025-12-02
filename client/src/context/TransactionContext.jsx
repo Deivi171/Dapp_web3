@@ -168,6 +168,18 @@ export const TransactionProvider = ({ children }) => {
     };
 
     /**
+     * Desconecta la wallet (limpia el estado local)
+     * Nota: MetaMask no tiene un método nativo para desconectar,
+     * así que limpiamos el estado local de la app
+     */
+    const disconnectWallet = () => {
+        setCurrentAccount('');
+        setBalance("0");
+        setTransactions([]);
+        toast("Wallet desconectada", { icon: "👋" });
+    };
+
+    /**
      * Envía una transacción
      */
     const sendTransaction = async () => {
@@ -277,7 +289,8 @@ export const TransactionProvider = ({ children }) => {
         <TransactionContext.Provider 
             value={{ 
                 // Wallet
-                connectWallet, 
+                connectWallet,
+                disconnectWallet,
                 currentAccount,
                 balance,
                 

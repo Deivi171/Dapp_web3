@@ -3,6 +3,7 @@ import { BiSearchAlt } from "react-icons/bi";
 import { RiHeart2Fill } from "react-icons/ri";
 import { useContext } from "react";
 import { ThemeContext } from "../context/ThemeContext";
+import { GradientText } from "./ui";
 
 const ServiceCard = ({ color, title, icon, subtitle, theme }) => (
     <div className={`flex flex-row justify-start items-center p-3 m-2 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 rounded-xl ${theme === 'dark'
@@ -28,10 +29,14 @@ const Services = () => {
         <div className="flex flex-col md:flex-row w-full justify-center items-center py-12 relative z-20">
             <div className="flex-1 flex flex-col justify-start items-start md:p-20 py-12 px-4">
                 <h1 className={`text-3xl sm:text-5xl py-2 animate-fadeInLeft font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>
-                    Services that we
+                }`}>
+                <GradientText colors={["#ffffff", "#222222"]}
+                            animationSpeed={10}
+                            className="font-bold"   
+                    >Services that we
                     <br />
-                    continue to <span className={theme === 'dark' ? 'text-gradient' : 'text-[#2952e3]'}>improve</span>
+                    continue to improve</GradientText>
+                    
                 </h1>
                 <p className={`mt-5 text-base animate-fadeInLeft delay-200 ${theme === 'dark' ? 'text-white' : 'text-gray-800'
                     }`}>

@@ -9,11 +9,12 @@ import { SiEthereum } from "react-icons/si";
 import { BsInfoCircle, BsShieldCheck, BsGlobe, BsLink45Deg } from "react-icons/bs";
 import { HiOutlineQrcode } from "react-icons/hi";
 import { BiLock, BiCoinStack } from "react-icons/bi";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 
 import { TransactionContext } from "../context/TransactionContext";
 import { ThemeContext } from "../context/ThemeContext";
 import { Loader } from "./";
-import { QRCodeModal, CopyButton } from "./ui";
+import { QRCodeModal, CopyButton, GradientText } from "./ui";
 import { shortenAddress } from "../utils/shortenAddress";
 import { formatUSD, formatETH } from "../utils/formatters";
 import { validateTransactionForm } from "../utils/validators";
@@ -102,59 +103,103 @@ const Welcome = () => {
     // Calcular valor en USD
     const balanceInUSD = ethPrice && balance ? parseFloat(balance) * ethPrice : 0;
 
+    // Estados para efecto 3D de la tarjeta ETH
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    
+    const springConfig = { damping: 20, stiffness: 300 };
+    const rotateX = useSpring(useTransform(y, [-100, 100], [15, -15]), springConfig);
+    const rotateY = useSpring(useTransform(x, [-100, 100], [-15, 15]), springConfig);
+    const scale = useSpring(1, springConfig);
+    const translateZ = useSpring(0, springConfig);
+
+    const handleMouseMove = (e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        x.set(e.clientX - centerX);
+        y.set(e.clientY - centerY);
+    };
+
+    const handleMouseEnter = () => {
+        scale.set(1.05);
+        translateZ.set(30);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+        scale.set(1);
+        translateZ.set(0);
+    };
+
     return (
         <div className="flex w-full justify-center items-center">
-            <div className="flex mf:flex-row flex-col items-start justify-between md:p-20 py-12 px-4">
+            <div className="flex mf:flex-row flex-col items-start justify- md:p-20 py-12 px-4">
                 <div className="flex flex-1 justify-start items-start flex-col mf:mr-10">  
                     <h1 className={`text-3xl sm:text-5xl py-1 animate-fadeInLeft font-bold ${
                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }`}>
-                        Send Crypto <br /> across the world <br />
-                    </h1>
-                    <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-800'
-                    }`}>
-                        Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
-                    </p>
-                    {!currentAccount && (
-                        <button 
-                            type="button"
-                            onClick={connectWallet}
-                            className="flex flex-row justify-center items-center my-5 bg-[#2952e3] p-3 rounded-full cursor-pointer hover:bg-[#2546bd] animate-fadeInLeft delay-300 btn-gradient shadow-lg hover:shadow-2xl transform transition-all duration-300"
-                        >
-                            <AiFillPlayCircle className="text-white mr-2" size={20} />
-                            <p className="text-white text-base font-semibold">Connect Wallet</p>
-                        </button>
-                    )}
+                        <GradientText 
+                            colors={["#2952e3", "#8945F8", "#FF6B6B", "#4ECDC4", "#2952e3"]}
+                            animationSpeed={8}
+                            className="font-bold"
+                        > Send Crypto 
+                        <br />
+                        across the world </GradientText>
+
+                            <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${
+                            theme === 'dark' ? 'text-white' : 'text-gray-800'
+                            }`}>
+                            Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
+                            </p> 
+                        <br /><br />
+                        </h1>
                 </div>
 
                 <div className="flex flex-col flex-[1.5] items-center justify-start w-full mf:mt-0 mt-10 mf:ml-10">
-                    {/* Tarjeta ETH con balance */}
-                    <div className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight animate-float shadow-2xl relative overflow-hidden ${
-                        theme === 'dark' 
-                            ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500' 
-                            : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
-                    }`}>
-                        <div className="flex justify-between flex-col w-full h-full">
+                    {/* Tarjeta ETH con balance - Efecto 3D */}
+                    <motion.div
+                        onMouseMove={handleMouseMove}
+                        onMouseEnter={handleMouseEnter}
+                        onMouseLeave={handleMouseLeave}
+                        style={{
+                            rotateX,
+                            rotateY,
+                            scale,
+                            translateZ,
+                            transformStyle: "preserve-3d",
+                            perspective: 1000,
+                        }}
+                        className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight shadow-2xl relative overflow-hidden cursor-pointer ${
+                            theme === 'dark' 
+                                ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500' 
+                                : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
+                        }`}
+                    >
+                        {/* Capa de brillo para efecto 3D */}
+                        <motion.div
+                            style={{
+                                translateZ: 50,
+                            }}
+                            className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none"
+                        />
+                        
+                        <div className="flex justify-between flex-col w-full h-full" style={{ transform: "translateZ(30px)" }}>
                             <div className="flex justify-between items-start">
-                                <div className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 animate-pulse-slow bg-white/20">
+                                <motion.div 
+                                    style={{ translateZ: 60 }}
+                                    className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 animate-pulse-slow bg-white/20"
+                                >
                                     <SiEthereum fontSize={21} color="#fff" />
-                                </div>
+                                </motion.div>
                                 <div className="flex items-center gap-2">
-                                    {currentAccount && (
-                                        <button
-                                            onClick={() => setShowQRModal(true)}
-                                            className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-300 hover:scale-110"
-                                            title="Show QR to receive"
-                                        >
-                                            <HiOutlineQrcode fontSize={17} color="#fff" />
-                                        </button>
-                                    )}
+                                    
                                     <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
                                 </div>
                             </div>
 
-                            <div>
+                            <motion.div style={{ translateZ: 40 }}>
                                 <div className="flex items-center gap-2">
                                     <p className="text-white font-light text-sm">
                                         {shortenAddress(currentAccount)}
@@ -192,9 +237,9 @@ const Welcome = () => {
                                 {!currentAccount && (
                                     <p className="text-white font-semibold text-lg mt-1">Ethereum</p>
                                 )}
-                            </div>
+                            </motion.div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     <div className={`p-6 sm:w-[450px] w-full flex flex-col justify-start items-center animate-fadeInRight delay-200 shadow-xl rounded-2xl transition-all duration-300 ${
                         theme === 'dark' 
