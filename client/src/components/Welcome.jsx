@@ -9,7 +9,7 @@ import { SiEthereum } from "react-icons/si";
 import { BsInfoCircle, BsShieldCheck, BsGlobe, BsLink45Deg } from "react-icons/bs";
 import { HiOutlineQrcode } from "react-icons/hi";
 import { BiLock, BiCoinStack } from "react-icons/bi";
-import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useSpring } from "motion/react";
 
 import { TransactionContext } from "../context/TransactionContext";
 import { ThemeContext } from "../context/ThemeContext";
@@ -102,139 +102,150 @@ const Welcome = () => {
     // Calcular valor en USD
     const balanceInUSD = ethPrice && balance ? parseFloat(balance) * ethPrice : 0;
 
-    // Estados para efecto 3D de la tarjeta ETH
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-
-    const springConfig = { damping: 20, stiffness: 300 };
-    const rotateX = useSpring(useTransform(y, [-100, 100], [15, -15]), springConfig);
-    const rotateY = useSpring(useTransform(x, [-100, 100], [-15, 15]), springConfig);
-    const scale = useSpring(1, springConfig);
-    const translateZ = useSpring(0, springConfig);
+    // Estados para efecto 3D tipo TiltedCard
+    const cardRef = React.useRef(null);
+    const rotateAmplitude = 14;
+    
+    const springValues = { damping: 30, stiffness: 100, mass: 2 };
+    const rotateX = useSpring(0, springValues);
+    const rotateY = useSpring(0, springValues);
+    const scale = useSpring(1, springValues);
+    const glareX = useMotionValue(0);
+    const glareY = useMotionValue(0);
+    const glareOpacity = useSpring(0, springValues);
 
     const handleMouseMove = (e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        x.set(e.clientX - centerX);
-        y.set(e.clientY - centerY);
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left - rect.width / 2;
+        const offsetY = e.clientY - rect.top - rect.height / 2;
+        
+        const rotationX = (offsetY / (rect.height / 2)) * -rotateAmplitude;
+        const rotationY = (offsetX / (rect.width / 2)) * rotateAmplitude;
+        
+        rotateX.set(rotationX);
+        rotateY.set(rotationY);
+        glareX.set(e.clientX - rect.left);
+        glareY.set(e.clientY - rect.top);
     };
 
     const handleMouseEnter = () => {
-        scale.set(1.05);
-        translateZ.set(30);
+        scale.set(1.08);
+        glareOpacity.set(1);
     };
 
     const handleMouseLeave = () => {
-        x.set(0);
-        y.set(0);
+        rotateX.set(0);
+        rotateY.set(0);
         scale.set(1);
-        translateZ.set(0);
+        glareOpacity.set(0);
     };
 
     return (
         <div className="flex w-full justify-center items-center">
-            <div className="flex mf:flex-row flex-col items-start justify- md:p-20 py-12 px-4">
+            <div className="flex mf:flex-row flex-col items-start justify-start md:p-20 py-12 px-4">
                 <div className="flex flex-1 justify-start items-start flex-col mf:mr-10">
                     <h1 className={`text-3xl sm:text-5xl py-1 animate-fadeInLeft font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}>
                         <GradientText
-                            colors={["#2952e3", "#8945F8", "#FF6B6B", "#4ECDC4", "#2952e3"]}
+                            colors={["#2952e3", "#8945F8", "#4ECDC4", "#2952e3"]}
                             animationSpeed={8}
                             className="font-bold"
-                        > Send Crypto
-                            <br />
-                            across the world </GradientText>
-
-                        <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${theme === 'dark' ? 'text-white' : 'text-gray-800'
-                            }`}>
-                            Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
-                        </p>
-                        <br /><br />
+                        >
+                            Send Crypto<br />across the world
+                        </GradientText>
                     </h1>
+                    <p className={`text-left mt-5 font-light md:w-9/12 w-11/12 text-base animate-fadeInLeft delay-200 ${theme === 'dark' ? 'text-white' : 'text-gray-800'
+                        }`}>
+                        Explore the crypto world. Buy and sell cryptocurrencies easily on Flashet.
+                    </p>
                 </div>
 
                 <div className="flex flex-col flex-[1.5] items-center justify-start w-full mf:mt-0 mt-10 mf:ml-10">
-                    {/* Tarjeta ETH con balance - Efecto 3D */}
-                    <motion.div
+                    {/* Tarjeta ETH con balance - Efecto TiltedCard */}
+                    <figure
+                        ref={cardRef}
+                        className="relative [perspective:800px] flex items-center justify-center my-5"
                         onMouseMove={handleMouseMove}
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={handleMouseLeave}
-                        style={{
-                            rotateX,
-                            rotateY,
-                            scale,
-                            translateZ,
-                            transformStyle: "preserve-3d",
-                            perspective: 1000,
-                        }}
-                        className={`p-4 justify-end items-start flex-col rounded-xl h-48 sm:w-96 w-full my-5 animate-fadeInRight shadow-2xl relative overflow-hidden cursor-pointer ${theme === 'dark'
-                                ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500'
-                                : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
-                            }`}
                     >
-                        {/* Capa de brillo para efecto 3D */}
                         <motion.div
+                            className="relative [transform-style:preserve-3d]"
                             style={{
-                                translateZ: 50,
+                                rotateX,
+                                rotateY,
+                                scale
                             }}
-                            className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent pointer-events-none"
-                        />
-
-                        <div className="flex justify-between flex-col w-full h-full" style={{ transform: "translateZ(30px)" }}>
-                            <div className="flex justify-between items-start">
+                        >
+                            <div
+                                className={`p-4 flex flex-col justify-between rounded-xl h-48 sm:w-96 w-full shadow-2xl relative overflow-hidden cursor-pointer ${theme === 'dark'
+                                    ? 'bg-gradient-to-br from-purple-600 via-pink-500 to-blue-500'
+                                    : 'bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500'
+                                }`}
+                            >
+                                {/* Glare effect */}
                                 <motion.div
-                                    style={{ translateZ: 60 }}
-                                    className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 animate-pulse-slow bg-white/20"
-                                >
-                                    <SiEthereum fontSize={21} color="#fff" />
-                                </motion.div>
-                                <div className="flex items-center gap-2">
-
-                                    <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
-                                </div>
-                            </div>
-
-                            <motion.div style={{ translateZ: 40 }}>
-                                <div className="flex items-center gap-2">
-                                    <p className="text-white font-light text-sm">
-                                        {shortenAddress(currentAccount)}
-                                    </p>
-                                    {currentAccount && (
-                                        <CopyButton
-                                            text={currentAccount}
-                                            theme="dark"
-                                            size={14}
-                                            className="!text-white/70 hover:!text-white"
-                                        />
-                                    )}
+                                    className="absolute inset-0 pointer-events-none"
+                                    style={{
+                                        background: 'radial-gradient(circle at var(--x) var(--y), rgba(255,255,255,0.3) 0%, transparent 60%)',
+                                        opacity: glareOpacity,
+                                        '--x': glareX,
+                                        '--y': glareY,
+                                    }}
+                                />
+                                
+                                <div className="flex justify-between items-start">
+                                    <div
+                                        className="w-10 h-10 rounded-full border-2 border-white flex justify-center items-center transition-all duration-300 hover:scale-110 hover:rotate-12 bg-white/20 [transform:translateZ(40px)]"
+                                    >
+                                        <SiEthereum fontSize={21} color="#fff" />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <BsInfoCircle fontSize={17} color="#fff" className="transition-all duration-300 hover:scale-125 cursor-pointer" />
+                                    </div>
                                 </div>
 
-                                {currentAccount && (
-                                    <div className="mt-1">
-                                        <p className="text-white font-bold text-xl">
-                                            {formatETH(balance, 4)}
+                                <div className="[transform:translateZ(30px)]">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-white font-light text-sm">
+                                            {shortenAddress(currentAccount)}
                                         </p>
-                                        {ethPrice > 0 && (
-                                            <p className="text-white/80 text-sm">
-                                                {formatUSD(balanceInUSD)}
-                                                {ethPriceChange !== 0 && (
-                                                    <span className={`ml-2 text-xs ${ethPriceChange >= 0 ? 'text-green-300' : 'text-red-300'
-                                                        }`}>
-                                                        {ethPriceChange >= 0 ? '+' : ''}{ethPriceChange.toFixed(2)}%
-                                                    </span>
-                                                )}
-                                            </p>
+                                        {currentAccount && (
+                                            <CopyButton
+                                                text={currentAccount}
+                                                theme="dark"
+                                                size={14}
+                                                className="!text-white/70 hover:!text-white"
+                                            />
                                         )}
                                     </div>
-                                )}
 
-                                {!currentAccount && (
-                                    <p className="text-white font-semibold text-lg mt-1">Ethereum</p>
-                                )}
-                            </motion.div>
-                        </div>
-                    </motion.div>
+                                    {currentAccount && (
+                                        <div className="mt-1">
+                                            <p className="text-white font-bold text-xl">
+                                                {formatETH(balance, 4)}
+                                            </p>
+                                            {ethPrice > 0 && (
+                                                <p className="text-white/80 text-sm">
+                                                    {formatUSD(balanceInUSD)}
+                                                    {ethPriceChange !== 0 && (
+                                                        <span className={`ml-2 text-xs ${ethPriceChange >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+                                                            {ethPriceChange >= 0 ? '+' : ''}{ethPriceChange.toFixed(2)}%
+                                                        </span>
+                                                    )}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {!currentAccount && (
+                                        <p className="text-white font-semibold text-lg mt-1">Ethereum</p>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </figure>
 
                     <div className={`p-6 sm:w-[450px] w-full flex flex-col justify-start items-center animate-fadeInRight delay-200 shadow-xl rounded-2xl transition-all duration-300 relative z-10 ${theme === 'dark'
                             ? 'bg-[rgba(39,51,89,0.4)] backdrop-blur-lg border border-white/20'

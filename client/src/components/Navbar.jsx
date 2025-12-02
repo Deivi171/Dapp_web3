@@ -25,18 +25,19 @@ const Navbar = () => {
     const { currentAccount, connectWallet, disconnectWallet } = useContext(TransactionContext);
     
     return (
-        <nav className='w-full flex md:justify-center justify-center items-center p-4'>
-            <div className='md:flex-[0.5] flex-initial justify-center items-center'>
-                <img 
-                    src={logo} 
-                    alt='logo' 
-                    className='w-40 md:w-48 cursor-pointer transition-all duration-300'
-                    style={{
-                        filter: theme === 'light' ? 'invert(1) brightness(0)' : 'none'
-                    }}
-                />
-            </div>
-            <ul className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} md:flex hidden list-none flex-row justify-between items-center flex-initial`}>
+        <nav className='w-full flex justify-center items-center p-4'>
+            <div className='w-full max-w-7xl flex justify-between items-center px-4 md:px-8'>
+                <div className='flex-initial justify-center items-center'>
+                    <img 
+                        src={logo} 
+                        alt='logo' 
+                        className='w-40 md:w-48 cursor-pointer transition-all duration-300'
+                        style={{
+                            filter: theme === 'light' ? 'invert(1) brightness(0)' : 'none'
+                        }}
+                    />
+                </div>
+                <ul className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} md:flex hidden list-none flex-row justify-end items-center gap-2`}>
                 {/* Botón de cambio de tema */}
                 <li 
                     onClick={toggleTheme}
@@ -49,65 +50,68 @@ const Navbar = () => {
                         <button 
                             type="button"
                             onClick={connectWallet}
-                            className="flex flex-row justify-center items-center my-5 bg-[#2952e3] p-3 rounded-full cursor-pointer hover:bg-[#2546bd] btn-gradient shadow-lg hover:shadow-2xl transform transition-all duration-300"
+                            className="flex flex-row justify-center items-center my-5 bg-[#2952e3] py-3 px-6 min-w-[160px] rounded-full cursor-pointer hover:bg-[#2546bd] btn-gradient shadow-lg hover:shadow-2xl transform transition-all duration-300 whitespace-nowrap"
                         >
-                            <AiFillPlayCircle className="text-white mr-2" size={20} />
-                            <p className="text-white text-base font-semibold">Connect Wallet</p>
+                            <AiFillPlayCircle className="text-white mr-2 flex-shrink-0" size={20} />
+                            <span className="text-white text-base font-semibold">Connect Wallet</span>
                         </button>
                     ):(
                         <button 
                             onClick={disconnectWallet}
-                            className='flex flex-row justify-center items-center my-5 bg-[#ff0000] p-3 rounded-full cursor-pointer hover:bg-[#ff0000] btn-gradient-red shadow-lg hover:shadow-2xl transform transition-all duration-300'
+                            className='flex flex-row justify-center items-center my-5 py-3 px-6 min-w-[160px] rounded-full cursor-pointer btn-gradient-red shadow-lg hover:shadow-2xl transform transition-all duration-300 whitespace-nowrap'
                     >
-                            <BiLogOut className="text-white mr-2" size={20} />
-                            <p className="text-white text-base font-semibold">Logout</p>
+                            <BiLogOut className="text-white mr-2 flex-shrink-0" size={20} />
+                            <span className="text-white text-base font-semibold">Logout</span>
                         </button>
                     )}
                 
-            </ul>
-            <div className='flex relative'>
-                {/* Botón de tema en móvil */}
-                <button 
-                    onClick={toggleTheme}
-                    className={`${theme === 'dark' ? 'bg-gray-700 text-yellow-400' : 'bg-white text-blue-600'} p-2 mr-4 rounded-full md:hidden transition-all duration-300`}
-                >
-                    {theme === 'dark' ? <BsSun fontSize={20} /> : <BsMoon fontSize={20} />}
-                </button>
+                </ul>
                 
-                {toggleMenu
-                    ? <AiOutlineClose fontSize={28} className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} md:hidden cursor-pointer`} onClick={() => setToggleMenu(false)} />
-                    : <HiMenuAlt4 fontSize={28} className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} md:hidden cursor-pointer`} onClick={() => setToggleMenu(true)} />}
-                {toggleMenu && (
-                    <ul
-                        className={`z-10 fixed top-0 -right-2 p-3 w-[70vw] h-screen shadow-2xl md:hidden list-none
-                    flex flex-col justify-start items-end rounded-md ${theme === 'dark' ? 'blue-glassmorphism text-white' : 'bg-white text-gray-800'} animate-slide-in`}
+                {/* Menú móvil */}
+                <div className='flex relative md:hidden'>
+                    {/* Botón de tema en móvil */}
+                    <button 
+                        onClick={toggleTheme}
+                        className={`${theme === 'dark' ? 'bg-gray-700 text-yellow-400' : 'bg-white text-blue-600'} p-2 mr-4 rounded-full transition-all duration-300`}
                     >
-                        <li className='text-xl w-full my-2'>
-                            <AiOutlineClose onClick={() => setToggleMenu(false)} />
-                        </li>
-                        
-                        {/* Botón de Wallet en móvil */}
-                        <li className='my-2 text-lg w-full'>
-                            {currentAccount ? (
-                                <div 
-                                    onClick={() => { disconnectWallet(); setToggleMenu(false); }}
-                                    className='bg-gradient-to-r from-red-500 to-red-600 py-2 px-5 rounded-full cursor-pointer hover:from-red-600 hover:to-red-700 text-white text-center flex items-center justify-center gap-2'
-                                >
-                                    <span className="text-sm">{shortenAddress(currentAccount)}</span>
-                                    <BiLogOut fontSize={18} />
-                                </div>
-                            ) : (
-                                <div 
-                                    onClick={() => { connectWallet(); setToggleMenu(false); }}
-                                    className='bg-[#2952e3] py-2 px-5 rounded-full cursor-pointer hover:bg-[#2546bd] text-white text-center flex items-center justify-center gap-2'
-                                >
-                                    <BiWallet fontSize={18} />
-                                    <span>Connect Wallet</span>
-                                </div>
-                            )}
-                        </li>
-                    </ul>
-                )}
+                        {theme === 'dark' ? <BsSun fontSize={20} /> : <BsMoon fontSize={20} />}
+                    </button>
+                    
+                    {toggleMenu
+                        ? <AiOutlineClose fontSize={28} className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} cursor-pointer`} onClick={() => setToggleMenu(false)} />
+                        : <HiMenuAlt4 fontSize={28} className={`${theme === 'dark' ? 'text-white' : 'text-gray-800'} cursor-pointer`} onClick={() => setToggleMenu(true)} />}
+                    {toggleMenu && (
+                        <ul
+                            className={`z-10 fixed top-0 -right-2 p-3 w-[70vw] h-screen shadow-2xl list-none
+                        flex flex-col justify-start items-end rounded-md ${theme === 'dark' ? 'blue-glassmorphism text-white' : 'bg-white text-gray-800'} animate-slide-in`}
+                        >
+                            <li className='text-xl w-full my-2'>
+                                <AiOutlineClose onClick={() => setToggleMenu(false)} />
+                            </li>
+                            
+                            {/* Botón de Wallet en móvil */}
+                            <li className='my-2 text-lg w-full'>
+                                {currentAccount ? (
+                                    <div 
+                                        onClick={() => { disconnectWallet(); setToggleMenu(false); }}
+                                        className='bg-gradient-to-r from-red-500 to-red-600 py-2 px-5 rounded-full cursor-pointer hover:from-red-600 hover:to-red-700 text-white text-center flex items-center justify-center gap-2'
+                                    >
+                                        <span className="text-sm">{shortenAddress(currentAccount)}</span>
+                                        <BiLogOut fontSize={18} />
+                                    </div>
+                                ) : (
+                                    <div 
+                                        onClick={() => { connectWallet(); setToggleMenu(false); }}
+                                        className='bg-[#2952e3] py-2 px-5 rounded-full cursor-pointer hover:bg-[#2546bd] text-white text-center flex items-center justify-center gap-2'
+                                    >
+                                        <BiWallet fontSize={18} />
+                                        <span>Connect Wallet</span>
+                                    </div>
+                                )}
+                            </li>
+                        </ul>
+                    )}
+                </div>
             </div>
         </nav>
     );

@@ -30,7 +30,7 @@ const Services = () => {
             <div className="flex-1 flex flex-col justify-start items-start md:p-20 py-12 px-4">
                 <h1 className={`text-3xl sm:text-5xl py-2 animate-fadeInLeft font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
-                <GradientText colors={["#ffffff", "#222222"]}
+                <GradientText colors={["#2952e3", "#8945F8", "#4ECDC4", "#2952e3"]}
                             animationSpeed={10}
                             className="font-bold"   
                     >Services that we

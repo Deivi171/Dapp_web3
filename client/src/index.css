@@ -236,6 +236,19 @@ body {
   animation-delay: 0.6s;
 }
 
+/* Animation delays for blob stagger effect */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
 /* Mejoras a glassmorphism */
 .blue-glassmorphism {
   background: rgba(39, 51, 89, 0.4);
