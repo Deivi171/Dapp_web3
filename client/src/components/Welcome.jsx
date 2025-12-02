@@ -143,7 +143,7 @@ const Welcome = () => {
 
     return (
         <div className="flex w-full justify-center items-center">
-            <div className="flex mf:flex-row flex-col items-start justify-start md:p-20 py-12 px-4">
+            <div className="flex mf:flex-row flex-col items-start justify-start md:p-20 md:pt-8 py-8 px-4">
                 <div className="flex flex-1 justify-start items-start flex-col mf:mr-10">
                     <h1 className={`text-3xl sm:text-5xl py-1 animate-fadeInLeft font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'
                         }`}>

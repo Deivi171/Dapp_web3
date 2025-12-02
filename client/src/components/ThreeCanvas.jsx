@@ -104,7 +104,7 @@ const ThreeCanvas = () => {
                     scene.add(scrollGroup);
 
                     // Initial Position - más a la izquierda para no chocar con el formulario
-                    scrollGroup.position.set(-2.7, -1.7, 0);
+                    scrollGroup.position.set(-2.7, -0.8, 0);
                     scrollGroup.rotation.set(0, 0, 0);
                     model.scale.set(0.85, 0.85, 0.85);
 
