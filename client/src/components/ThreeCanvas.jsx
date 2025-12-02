@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { gsap } from 'gsap';
@@ -9,32 +9,37 @@ gsap.registerPlugin(ScrollTrigger);
 const ThreeCanvas = () => {
     const canvasRef = useRef(null);
     const modelRef = useRef(null);
+    const [hasError, setHasError] = useState(false);
 
     useEffect(() => {
         if (!canvasRef.current) return;
 
-        // Scene setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({
-            canvas: canvasRef.current,
-            alpha: true,
-            antialias: true,
-        });
+        let renderer;
+        let animationId;
 
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        try {
+            // Scene setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({
+                canvas: canvasRef.current,
+                alpha: true,
+                antialias: true,
+            });
 
-        // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
-        scene.add(ambientLight);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-        directionalLight.position.set(5, 5, 5);
-        scene.add(directionalLight);
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+            scene.add(ambientLight);
 
-        // Initial Camera Position
-        camera.position.z = 5;
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+
+            // Initial Camera Position
+            camera.position.z = 5;
 
         // Load Model
         const loader = new GLTFLoader();
@@ -104,6 +109,7 @@ const ThreeCanvas = () => {
             undefined,
             (error) => {
                 console.error('An error occurred loading the model:', error);
+                setHasError(true);
             }
         );
 
@@ -118,7 +124,7 @@ const ThreeCanvas = () => {
 
         // Animation Loop
         const animate = () => {
-            requestAnimationFrame(animate);
+            animationId = requestAnimationFrame(animate);
             renderer.render(scene, camera);
         };
 
@@ -127,12 +133,18 @@ const ThreeCanvas = () => {
         // Cleanup
         return () => {
             window.removeEventListener('resize', handleResize);
-            if (renderer.domElement && document.body.contains(renderer.domElement)) {
-                // document.body.removeChild(renderer.domElement); // We are rendering in a React component, so React handles removal
-            }
-            renderer.dispose();
+            if (animationId) cancelAnimationFrame(animationId);
+            if (renderer) renderer.dispose();
+            ScrollTrigger.getAll().forEach(t => t.kill());
         };
+        } catch (error) {
+            console.error('ThreeCanvas error:', error);
+            setHasError(true);
+        }
     }, []);
+
+    // Si hay error, no renderizar nada
+    if (hasError) return null;
 
     return (
         <canvas
