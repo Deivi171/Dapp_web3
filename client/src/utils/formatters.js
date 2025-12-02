@@ -42,15 +42,25 @@ export const formatETH = (value, decimals = 4) => {
 export const formatDate = (date, locale = 'es-ES') => {
   if (!date) return '';
   
-  const dateObj = new Date(date);
-  
-  return new Intl.DateTimeFormat(locale, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(dateObj);
+  try {
+    const dateObj = new Date(date);
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return String(date); // Retornar el valor original si no es una fecha válida
+    }
+    
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(dateObj);
+  } catch (error) {
+    console.warn('formatDate error:', error);
+    return String(date);
+  }
 };
 
 /**
@@ -61,16 +71,27 @@ export const formatDate = (date, locale = 'es-ES') => {
 export const formatRelativeTime = (date) => {
   if (!date) return '';
   
-  const now = new Date();
-  const dateObj = new Date(date);
-  const diffInSeconds = Math.floor((now - dateObj) / 1000);
-  
-  if (diffInSeconds < 60) return 'Hace un momento';
-  if (diffInSeconds < 3600) return `Hace ${Math.floor(diffInSeconds / 60)} min`;
-  if (diffInSeconds < 86400) return `Hace ${Math.floor(diffInSeconds / 3600)} horas`;
-  if (diffInSeconds < 604800) return `Hace ${Math.floor(diffInSeconds / 86400)} días`;
-  
-  return formatDate(date);
+  try {
+    const now = new Date();
+    const dateObj = new Date(date);
+    
+    // Verificar si la fecha es válida
+    if (isNaN(dateObj.getTime())) {
+      return String(date);
+    }
+    
+    const diffInSeconds = Math.floor((now - dateObj) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+    
+    return formatDate(date);
+  } catch (error) {
+    console.warn('formatRelativeTime error:', error);
+    return String(date);
+  }
 };
 
 /**
