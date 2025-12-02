@@ -3,7 +3,8 @@
  * @module components/Transactions
  */
 
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState, useRef } from 'react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
 import { TransactionContext } from '../context/TransactionContext';
 import { ThemeContext } from '../context/ThemeContext';
 
@@ -12,38 +13,86 @@ import { shortenAddress } from '../utils/shortenAddress';
 import { formatDate, formatETH, formatUSD } from '../utils/formatters';
 import { exportToCSV, exportToJSON } from '../utils/exportData';
 import useFetch from '../hooks/useFetch';
-import { CopyButton, TiltedCard } from './ui';
+import { CopyButton } from './ui';
 import { Stats, TransactionFilters } from './dashboard';
 
+const springValues = {
+    damping: 30,
+    stiffness: 100,
+    mass: 2
+};
+
 /**
- * Tarjeta de transaccion individual
+ * Tarjeta de transaccion individual con efecto 3D
  */
 const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, amount, url, theme, ethPrice }) => {
     const gifUrl = useFetch({ keyword });
     const amountInUSD = ethPrice ? parseFloat(amount) * ethPrice : 0;
+    
+    // Refs y estados para el efecto 3D
+    const ref = useRef(null);
+    const rotateX = useSpring(useMotionValue(0), springValues);
+    const rotateY = useSpring(useMotionValue(0), springValues);
+    const scale = useSpring(1, springValues);
+    const [isHovered, setIsHovered] = useState(false);
+
+    function handleMouse(e) {
+        if (!ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left - rect.width / 2;
+        const offsetY = e.clientY - rect.top - rect.height / 2;
+        const rotationX = (offsetY / (rect.height / 2)) * -10;
+        const rotationY = (offsetX / (rect.width / 2)) * 10;
+        rotateX.set(rotationX);
+        rotateY.set(rotationY);
+    }
+
+    function handleMouseEnter() {
+        scale.set(1.02);
+        setIsHovered(true);
+    }
+
+    function handleMouseLeave() {
+        scale.set(1);
+        rotateX.set(0);
+        rotateY.set(0);
+        setIsHovered(false);
+    }
 
     return (
-        <div className={`m-4 flex flex-1
-            2xl:min-w-[350px]
-            2xl:max-w-[350px]
-            xl:min-w-[300px]
-            xl:max-w-[300px]
-            lg:min-w-[280px]
-            lg:max-w-[280px]
-            sm:min-w-[250px]
-            sm:max-w-[250px]
-            flex-col p-4 rounded-xl
-            transition-all duration-500
-            animate-fadeInUp
-            cursor-pointer
-            border-2
-            ${
-                theme === 'dark' 
-                    ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 hover:border-[#2952e3]' 
-                    : 'bg-gradient-to-br from-white to-gray-50 border-gray-300 hover:border-[#2952e3] shadow-lg'
-            }
+        <motion.div 
+            ref={ref}
+            onMouseMove={handleMouse}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={{
+                rotateX,
+                rotateY,
+                scale,
+                transformStyle: 'preserve-3d',
+                perspective: '1000px'
+            }}
+            className={`m-4 flex flex-1
+                2xl:min-w-[350px]
+                2xl:max-w-[350px]
+                xl:min-w-[300px]
+                xl:max-w-[300px]
+                lg:min-w-[280px]
+                lg:max-w-[280px]
+                sm:min-w-[250px]
+                sm:max-w-[250px]
+                flex-col p-4 rounded-xl
+                transition-shadow duration-300
+                cursor-pointer
+                border-2
+                ${isHovered ? 'shadow-2xl shadow-purple-500/20' : 'shadow-lg'}
+                ${
+                    theme === 'dark' 
+                        ? `bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-sm border-gray-700 ${isHovered ? 'border-[#2952e3]' : ''}` 
+                        : `bg-gradient-to-br from-white/90 to-gray-50/90 backdrop-blur-sm border-gray-300 ${isHovered ? 'border-[#2952e3]' : ''} shadow-lg`
+                }
             `}>  
-            <div className="flex flex-col items-center w-full mt-2">
+            <div className="flex flex-col items-center w-full mt-2" style={{ transform: 'translateZ(20px)' }}>
                 <div className="w-full mb-4 p-2">
                     <div className="flex items-center justify-between">
                         <a href={`https://sepolia.etherscan.io/address/${addressFrom}`} target="_blank" rel="noreferrer" className="transition-all duration-300 hover:text-[#2952e3]">   
@@ -63,7 +112,7 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                     </div>
                     
                     <div className={`mt-3 px-2 py-1 rounded-lg ${
-                        theme === 'dark' ? 'bg-white/5' : 'bg-gray-100'
+                        theme === 'dark' ? 'bg-white/10' : 'bg-gray-100'
                     }`}>
                         <p className={`text-sm font-bold ${
                             theme === 'dark' ? 'text-white' : 'text-gray-900'
@@ -82,30 +131,30 @@ const TransactionCard = ({ addressTo, addressFrom, timestamp, message, keyword, 
                     )}
                 </div>
                 
-                {/* Imagen con efecto 3D TiltedCard */}
-                <TiltedCard
-                    imageSrc={gifUrl || url}
-                    altText={keyword}
-                    captionText={`${formatETH(amount, 4)} - ${keyword}`}
-                    containerHeight="200px"
-                    containerWidth="100%"
-                    imageHeight="180px"
-                    imageWidth="100%"
-                    scaleOnHover={1.05}
-                    rotateAmplitude={12}
-                    showMobileWarning={false}
-                    showTooltip={true}
-                />
+                {/* Imagen con efecto de profundidad */}
+                <div className="w-full h-48 rounded-lg overflow-hidden" style={{ transform: 'translateZ(40px)' }}>
+                    <img 
+                        src={gifUrl || url} 
+                        alt={keyword}
+                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                        onError={(e) => {
+                            e.target.src = `https://api.dicebear.com/7.x/shapes/svg?seed=${keyword}`;
+                        }}
+                    />
+                </div>
 
-                <div className={`p-2 px-4 w-max rounded-3xl -mt-4 shadow-2xl transition-all duration-300 hover:scale-110 z-10 ${
-                    theme === 'dark' 
-                        ? 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]' 
-                        : 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]'
-                }`}>
+                <div 
+                    className={`p-2 px-4 w-max rounded-3xl -mt-4 shadow-2xl transition-all duration-300 hover:scale-110 z-10 ${
+                        theme === 'dark' 
+                            ? 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]' 
+                            : 'bg-gradient-to-r from-[#2952e3] to-[#8945F8]'
+                    }`}
+                    style={{ transform: 'translateZ(60px)' }}
+                >
                     <p className="text-white font-bold text-xs">{formatDate(timestamp)}</p>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
