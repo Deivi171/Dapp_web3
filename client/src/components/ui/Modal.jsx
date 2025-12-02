@@ -9,11 +9,11 @@ import { AiOutlineClose } from 'react-icons/ai';
 /**
  * Modal component
  * @param {Object} props
- * @param {boolean} props.isOpen - Si el modal está abierto
- * @param {Function} props.onClose - Función para cerrar el modal
- * @param {string} props.title - Título del modal
- * @param {React.ReactNode} props.children - Contenido del modal
- * @param {string} props.theme - Tema actual ('dark' | 'light')
+ * @param {boolean} props.isOpen 
+ * @param {Function} props.onClose 
+ * @param {string} props.title 
+ * @param {React.ReactNode} props.children 
+ * @param {string} props.theme 
  */
 const Modal = ({ 
   isOpen, 
@@ -23,7 +23,7 @@ const Modal = ({
   theme = 'dark',
   maxWidth = 'max-w-md'
 }) => {
-  // Cerrar con ESC
+
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
